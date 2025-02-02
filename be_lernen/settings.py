@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -76,9 +78,6 @@ WSGI_APPLICATION = 'be_lernen.wsgi.application'
 
 env = environ.Env()
 environ.Env.read_env()
-import os
-for key, value in os.environ.items():
-    print(f"{key}: {value}")
 
 DATABASES = {
     'default': {
