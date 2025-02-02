@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  # Django Backend Service
+  app:
+    image: be_lernen
+    build:
+      context: .
+    container_name: django-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./be_lernen:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=be_lernen.settings
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  # # Vue.js Frontend Service
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   container_name: vue-frontend
+  #   ports:
+  #     - "5000:5000"
+  #   networks:
+  #     - app-network
+
+  # PostgreSQL Database Service (if you use Postgres)
+  db:
+    image: postgres:13
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db-data:
