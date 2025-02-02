@@ -1,0 +1,13 @@
+# .gitignore
+.env
+myenv/
+
+**/__pycache__/
+
+*.pyc
+*.pyo
+
+*.log
+
+.DS_Store      # macOS
+Thumbs.db      # Windows
