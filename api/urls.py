@@ -1,10 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
-from .views import WordViewSet, ListUsers, UserRegisterView
+from .views import WordViewSet, ListUsers, UserRegisterView, LanguageViewSet
 
 router = DefaultRouter()
 router.register(r'words', WordViewSet, basename='word')
+router.register(r'languages', LanguageViewSet, basename='language')
 
 urlpatterns = [
     path('api/', include(router.urls)),  

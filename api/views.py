@@ -1,17 +1,48 @@
 from rest_framework import viewsets, authentication, status
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Word
-from .serializers import WordSerializer, UserRegistrationSerializer
+from .models import Word, Language
+from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer
 from django.contrib.auth.models import User
 
+class LanguageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing languages.
+    Requires token authentication.
+    * Only admin users are able to access this view.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [IsAdminUser]
+
+    queryset = Language.objects.all()
+    serializer_class = LanguageSerializer
+
+    def get_queryset(self):
+        return Language.objects.all()
+
 class WordViewSet(viewsets.ModelViewSet):
-    queryset = Word.objects.all()  
-    serializer_class = WordSerializer  
+    """
+    ViewSet for managing words.
+    Requires token authentication.
+    """
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    queryset = Word.objects.all()
+    serializer_class = WordSerializer
 
     def perform_create(self, serializer):
+        """
+        Ensure the word is associated with the authenticated user.
+        """
         serializer.save(user=self.request.user)
+
+    def get_queryset(self):
+        """
+        Ensure users only see their own words.
+        """
+        return Word.objects.filter(user=self.request.user)
 
 class UserRegisterView(APIView):
     """
