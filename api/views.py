@@ -40,9 +40,15 @@ class WordViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Ensure users only see their own words.
+        Admins see all words; users see only their own words.
         """
-        return Word.objects.filter(user=self.request.user)
+        filters = {} if self.request.user.is_staff else {"user": self.request.user}
+
+        language_id = self.request.query_params.get("language")
+        if language_id:
+            filters["language"] = language_id
+
+        return Word.objects.filter(**filters)
 
 class UserRegisterView(APIView):
     """
