@@ -2,9 +2,12 @@ from rest_framework import viewsets, authentication, status
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.db import IntegrityError
 from .models import Word, Language
 from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer
-from django.contrib.auth.models import User
+from .exceptions import ConflictError
 
 class LanguageViewSet(viewsets.ModelViewSet):
     """
@@ -36,7 +39,12 @@ class WordViewSet(viewsets.ModelViewSet):
         """
         Ensure the word is associated with the authenticated user.
         """
-        serializer.save(user=self.request.user)
+        try:
+            serializer.save(user=self.request.user)
+        except IntegrityError:
+            raise ConflictError("A word with this user and language already exists.")
+        except Exception as e:
+            raise ValidationError(f"An error occurred: {str(e)}")
 
     def get_queryset(self):
         """

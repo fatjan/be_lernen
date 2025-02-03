@@ -33,9 +33,9 @@ class Word(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['user']),  # Index for user
-            models.Index(fields=['language']),  # Index for language
-            models.Index(fields=['user', 'language']),  # Index for both user and language
+            models.Index(fields=['user']),  
+            models.Index(fields=['language']),  
+            models.Index(fields=['user', 'language']),
         ]
         constraints = [
             models.UniqueConstraint(fields=['user', 'language', 'word'], name='unique_word_per_user_language')
