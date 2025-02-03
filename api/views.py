@@ -6,9 +6,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.http import JsonResponse
 from .models import Word, Language
 from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer
 from .exceptions import ConflictError
+
+def health_check(request):
+    return JsonResponse({"status": "ok"})
 
 class LanguageViewSet(viewsets.ModelViewSet):
     """
