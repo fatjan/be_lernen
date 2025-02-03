@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
+from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from .models import Word, Language
@@ -23,6 +24,12 @@ class LanguageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Language.objects.all()
+
+class WordPagination(PageNumberPagination):
+    page_size = 10  
+    page_size_query_param = 'page_size' 
+    max_page_size = 25 
+
 
 class WordViewSet(viewsets.ModelViewSet):
     """
@@ -56,7 +63,21 @@ class WordViewSet(viewsets.ModelViewSet):
         if language_id:
             filters["language"] = language_id
 
-        return Word.objects.filter(**filters)
+        words = Word.objects.filter(**filters)
+
+        return words
+
+    def get(self, request, *args, **kwargs):
+        """
+        Retrieve paginated word data.
+        """
+        words = self.get_queryset()
+        
+        paginator = WordPagination()
+        result_page = paginator.paginate_queryset(words, request)
+        serializer = WordSerializer(result_page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
 
 class UserRegisterView(APIView):
     """
