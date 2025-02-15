@@ -11,7 +11,7 @@ from .models import Word, Language
 from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer
 from .exceptions import ConflictError
 
-def health_check(request):
+def health_check():
     return JsonResponse({"status": "ok"})
 
 class LanguageViewSet(viewsets.ModelViewSet):

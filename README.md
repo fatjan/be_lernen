@@ -23,7 +23,7 @@ A Django-based web application designed for [briefly describe what your app does
 
 ```
 git clone https://github.com/fatjan/be_lernen
-cd your-repo-name
+cd be_lernen
 ```
 
 2. Create a virtual environment:
