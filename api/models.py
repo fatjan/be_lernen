@@ -27,6 +27,7 @@ class Word(models.Model):
         default='medium'
     )
     category = models.CharField(max_length=50, blank=True) # ex: animal, action
+    image_url = models.URLField(max_length=500, blank=True, null=True)
     added_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='word_entries')

@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from .models import Word, Language
 from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer
 from .exceptions import ConflictError
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import WordFilter
 # from .supabase_client import upload_image_to_supabase, get_public_url
 
 def health_check():
@@ -46,6 +48,8 @@ class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
     pagination_class = WordPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = WordFilter 
 
     def perform_create(self, serializer):
         """
