@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from .models import Word, Language
 from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer
 from .exceptions import ConflictError
+# from .supabase_client import upload_image_to_supabase, get_public_url
 
 def health_check():
     return JsonResponse({"status": "ok"})
@@ -32,8 +33,7 @@ class LanguageViewSet(viewsets.ModelViewSet):
 class WordPagination(PageNumberPagination):
     page_size = 10  
     page_size_query_param = 'page_size' 
-    max_page_size = 25 
-
+    max_page_size = 50 
 
 class WordViewSet(viewsets.ModelViewSet):
     """
@@ -45,6 +45,7 @@ class WordViewSet(viewsets.ModelViewSet):
 
     queryset = Word.objects.all()
     serializer_class = WordSerializer
+    pagination_class = WordPagination
 
     def perform_create(self, serializer):
         """
@@ -70,18 +71,6 @@ class WordViewSet(viewsets.ModelViewSet):
         words = Word.objects.filter(**filters)
 
         return words
-
-    def get(self, request, *args, **kwargs):
-        """
-        Retrieve paginated word data.
-        """
-        words = self.get_queryset()
-        
-        paginator = WordPagination()
-        result_page = paginator.paginate_queryset(words, request)
-        serializer = WordSerializer(result_page, many=True)
-
-        return paginator.get_paginated_response(serializer.data)
 
 class UserRegisterView(APIView):
     """
@@ -120,3 +109,17 @@ class ListUsers(APIView):
         """
         usernames = [user.username for user in User.objects.all()]
         return Response(usernames)
+
+# def upload_image_view(request):
+#     if request.method == "POST" and request.FILES.get("file"):
+#         file = request.FILES["file"]
+#         file_name = file.name
+
+#         try:
+#             file_path = upload_image_to_supabase(file, file_name)
+#             public_url = get_public_url(file_path)
+#             return JsonResponse({"message": "Upload successful", "url": public_url})
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=400)
+
+#     return JsonResponse({"error": "No file provided"}, status=400)
