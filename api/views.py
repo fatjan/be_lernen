@@ -12,6 +12,8 @@ from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import WordFilter
+from rest_framework.authtoken.models import Token
+from rest_framework.decorators import action
 
 def health_check():
     return JsonResponse({"status": "ok"})
@@ -75,6 +77,12 @@ class WordViewSet(viewsets.ModelViewSet):
 
         return words
 
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def featured(self, request):
+        featured_words = Word.objects.filter(category='daily') 
+        serializer = self.get_serializer(featured_words, many=True)
+        return Response(serializer.data)
+
 class UserRegisterView(APIView):
     """
     API endpoint for user registration.
@@ -84,17 +92,31 @@ class UserRegisterView(APIView):
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
         
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                "message": "User registered successfully!",
-                "user": {
-                    "username": user.username,
-                    "email": user.email
-                }
-            }, status=status.HTTP_201_CREATED)
+        if not serializer.is_valid():
+            unique_fields = ["username", "email"]
+            for field in unique_fields:
+                if field in serializer.errors and any(
+                    err.code == "unique" for err in serializer.errors[field]
+                ):
+                    return Response(
+                        {"error": f"{field.capitalize()} already taken."},
+                        status=status.HTTP_409_CONFLICT
+                    )
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.save()
+
+        token, _ = Token.objects.get_or_create(user=user)
+
+        return Response({
+            "message": "User registered successfully!",
+            "user": {
+                "username": user.username,
+                "email": user.email
+            },
+            "token": token.key
+        }, status=status.HTTP_201_CREATED)
 
 class ListUsers(APIView):
     """
