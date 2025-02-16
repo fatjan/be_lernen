@@ -25,6 +25,7 @@ class WordSerializer(serializers.ModelSerializer):
             "gender", 
             "difficulty_level", 
             "category", 
+            "image_url", 
             "added_at", 
             "updated_at", 
             "user"
