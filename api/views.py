@@ -12,7 +12,6 @@ from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import WordFilter
-# from .supabase_client import upload_image_to_supabase, get_public_url
 
 def health_check():
     return JsonResponse({"status": "ok"})
@@ -113,17 +112,3 @@ class ListUsers(APIView):
         """
         usernames = [user.username for user in User.objects.all()]
         return Response(usernames)
-
-# def upload_image_view(request):
-#     if request.method == "POST" and request.FILES.get("file"):
-#         file = request.FILES["file"]
-#         file_name = file.name
-
-#         try:
-#             file_path = upload_image_to_supabase(file, file_name)
-#             public_url = get_public_url(file_path)
-#             return JsonResponse({"message": "Upload successful", "url": public_url})
-#         except Exception as e:
-#             return JsonResponse({"error": str(e)}, status=400)
-
-#     return JsonResponse({"error": "No file provided"}, status=400)
