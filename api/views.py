@@ -7,7 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
-from .models import Word, Language
+from .models import Word, Language, UserProfile
 from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserSerializer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,6 +15,7 @@ from .filters import WordFilter
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.views import ObtainAuthToken
 
 def health_check():
     return JsonResponse({"status": "ok"})
@@ -88,12 +89,19 @@ class WordViewSet(viewsets.ModelViewSet):
     def batch(self, request):
         user = request.user 
         words_data = request.data
+        
         for word in words_data:
             word['user'] = user.id
         
         serializer = WordSerializer(data=words_data, many=True)
+        
         if serializer.is_valid():
             serializer.save()
+
+            if hasattr(user, 'userprofile'):
+                user.userprofile.onboarded = True
+                user.userprofile.save()
+
             return Response({"message": "Words added successfully!", "data": serializer.data}, status=201)
         
         return Response(serializer.errors, status=400)
@@ -123,14 +131,18 @@ class UserRegisterView(APIView):
         user = serializer.save()
 
         token, _ = Token.objects.get_or_create(user=user)
+        user_profile, _ = UserProfile.objects.get_or_create(user=user)
 
         return Response({
             "message": "User registered successfully!",
             "user": {
                 "username": user.username,
-                "email": user.email
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
             },
-            "token": token.key
+            "token": token.key,
+            "onboarded": user_profile.onboarded,
         }, status=status.HTTP_201_CREATED)
 
 class ListUsers(APIView):
@@ -158,3 +170,20 @@ class GetUserDataView(APIView):
         user = request.user 
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        token = Token.objects.get(key=response.data["token"])
+        user = token.user
+
+        user_profile, _ = UserProfile.objects.get_or_create(user=user)
+
+        return Response({
+            "token": token.key,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "onboarded": user_profile.onboarded,
+        })

@@ -45,3 +45,7 @@ class Word(models.Model):
 
     def __str__(self):
         return self.word
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    onboarded = models.BooleanField(default=False)
