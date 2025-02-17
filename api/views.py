@@ -79,7 +79,7 @@ class WordViewSet(viewsets.ModelViewSet):
         return words
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
-    def featured(self):
+    def featured(self, request):
         featured_words = Word.objects.filter(category='daily') 
         serializer = self.get_serializer(featured_words, many=True)
         return Response(serializer.data)
