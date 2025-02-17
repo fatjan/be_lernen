@@ -30,7 +30,7 @@ class WordSerializer(serializers.ModelSerializer):
             "updated_at", 
             "user"
         ]
-        read_only_fields = ["id", "added_at", "updated_at", "user"]
+        read_only_fields = ["id", "added_at", "updated_at"]
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

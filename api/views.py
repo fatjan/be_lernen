@@ -64,7 +64,7 @@ class WordViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ValidationError(f"An error occurred: {str(e)}")
 
-    def get_queryset(self, request):
+    def get_queryset(self):
         """
         Admins see all words; users see only their own words.
         """
