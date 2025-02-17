@@ -8,12 +8,13 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
 from .models import Word, Language
-from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer
+from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserSerializer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import WordFilter
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
+from rest_framework.authentication import TokenAuthentication
 
 def health_check():
     return JsonResponse({"status": "ok"})
@@ -63,7 +64,7 @@ class WordViewSet(viewsets.ModelViewSet):
         except Exception as e:
             raise ValidationError(f"An error occurred: {str(e)}")
 
-    def get_queryset(self):
+    def get_queryset(self, request):
         """
         Admins see all words; users see only their own words.
         """
@@ -78,10 +79,24 @@ class WordViewSet(viewsets.ModelViewSet):
         return words
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
-    def featured(self, request):
+    def featured(self):
         featured_words = Word.objects.filter(category='daily') 
         serializer = self.get_serializer(featured_words, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def batch(self, request):
+        user = request.user 
+        words_data = request.data
+        for word in words_data:
+            word['user'] = user.id
+        
+        serializer = WordSerializer(data=words_data, many=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Words added successfully!", "data": serializer.data}, status=201)
+        
+        return Response(serializer.errors, status=400)
 
 class UserRegisterView(APIView):
     """
@@ -134,3 +149,12 @@ class ListUsers(APIView):
         """
         usernames = [user.username for user in User.objects.all()]
         return Response(usernames)
+
+class GetUserDataView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user 
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
