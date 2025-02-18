@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
 from .models import Word, Language, UserProfile
-from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserSerializer
+from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserLoginSerializer, UserProfileSerializer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import WordFilter
@@ -161,49 +161,41 @@ class ListUsers(APIView):
         usernames = [user.username for user in User.objects.all()]
         return Response(usernames)
 
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        
+        # Use UserSerializer for consistent data representation
+        user_data = UserLoginSerializer(user).data
+        
+        return Response({
+            'token': token.key,
+            'user': user_data
+        })
+
 class GetUserDataView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        user = User.objects.select_related('userprofile__preferred_language').get(id=user.id)
-        serializer = UserSerializer(user)
+        serializer = UserProfileSerializer(request.user)
         return Response(serializer.data)
 
-class CustomAuthToken(ObtainAuthToken):
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        token = Token.objects.get(key=response.data["token"])
-        user = token.user
-
-        user_profile, _ = UserProfile.objects.get_or_create(user=user)
-
-        return Response({
-            "token": token.key,
-            "username": user.username,
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "onboarded": user_profile.onboarded,
-            "preferred_language": user_profile.preferred_language,
-        })
-
 class UpdateUserView(generics.UpdateAPIView):
-    serializer_class = UserSerializer
+    serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def get_object(self):
-        return self.request.user  # Only allow users to update their own data
+        return self.request.user
 
-    @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated])
     def update(self, request, *args, **kwargs):
-        user = self.get_object()
-        user_serializer = self.get_serializer(user, data=request.data, partial=True)
-
-        if user_serializer.is_valid():
-            user_serializer.save()
-
-            return Response(user_serializer.data)
-
-        return Response(user_serializer.errors, status=400)
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)

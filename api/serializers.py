@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth import authenticate
 from .models import Word, User, Language
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -49,29 +50,87 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         return user
 
-class UserSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(write_only=True, required=False)  # Accept `name` on input but don't include in output
-    preferred_language = serializers.CharField(source='userprofile.preferred_language.name', required=False)
-    
+class UserLoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    onboarded = serializers.SerializerMethodField(read_only=True)
+    preferred_language = serializers.SerializerMethodField(read_only=True)
+
+    def validate(self, data):
+        username = data.get('username')
+        password = data.get('password')
+
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if user:
+                if user.is_active:
+                    data['user'] = user
+                    return data
+                raise serializers.ValidationError('User account is disabled.')
+            raise serializers.ValidationError('Unable to log in with provided credentials.')
+        raise serializers.ValidationError('Must include "username" and "password".')
+
+    def get_onboarded(self, obj):
+        user = obj['user'] if isinstance(obj, dict) else obj
+        return getattr(user.userprofile, 'onboarded', False) if user else False
+
+    def get_preferred_language(self, obj):
+        user = obj['user'] if isinstance(obj, dict) else obj
+        try:
+            return user.userprofile.preferred_language.code if user and user.userprofile.preferred_language else None
+        except AttributeError:
+            return None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        user = instance['user'] if isinstance(instance, dict) else instance
+        if user:
+            representation.update({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            })
+        return representation
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    preferred_language = serializers.SerializerMethodField(read_only=True)
+    onboarded = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "name", "preferred_language"]
+        fields = [
+            "id", 
+            "username", 
+            "email", 
+            "first_name", 
+            "last_name", 
+            "name", 
+            "preferred_language",
+            "onboarded"
+        ]
+        read_only_fields = ["id", "username"]
         extra_kwargs = {
             "first_name": {"required": False},
             "last_name": {"required": False},
         }
-    
+
+    def get_preferred_language(self, obj):
+        try:
+            return obj.userprofile.preferred_language.code if obj.userprofile.preferred_language else None
+        except AttributeError:
+            return None
+
     def get_onboarded(self, obj):
         return getattr(obj.userprofile, 'onboarded', False)
 
-    def create(self, validated_data):
-        name = validated_data.pop("name", "")
-        name_parts = name.strip().split(" ")
-
-        validated_data["first_name"] = name_parts[0] if name_parts else ""
-        validated_data["last_name"] = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-
-        return super().create(validated_data)
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.first_name or instance.last_name:
+            representation['name'] = f"{instance.first_name} {instance.last_name}".strip()
+        return representation
 
     def update(self, instance, validated_data):
         user_profile_data = validated_data.pop('userprofile', {})
@@ -101,11 +160,14 @@ class UserSerializer(serializers.ModelSerializer):
         return first_name, last_name
 
     def to_representation(self, instance):
-        """Override to_representation to add 'name' field in the response."""
-        # Get the default representation
         representation = super().to_representation(instance)
-        
-        # Combine first_name and last_name into a single 'name' field
-        representation['name'] = f"{instance.first_name} {instance.last_name}".strip()
-
+        # Only include name if first_name or last_name exists
+        if instance.first_name or instance.last_name:
+            representation['name'] = f"{instance.first_name} {instance.last_name}".strip()
         return representation
+
+    def get_preferred_language(self, obj):
+        try:
+            return obj.userprofile.preferred_language.code if obj.userprofile.preferred_language else None
+        except AttributeError:
+            return None
