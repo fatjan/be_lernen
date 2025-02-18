@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Word, User, Language
+from .models import Word, User, Language, UserProfile
 
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,6 +64,8 @@ class UserLoginSerializer(serializers.Serializer):
             user = authenticate(username=username, password=password)
             if user:
                 if user.is_active:
+                    # Create UserProfile if it doesn't exist
+                    UserProfile.objects.get_or_create(user=user)
                     data['user'] = user
                     return data
                 raise serializers.ValidationError('User account is disabled.')
@@ -72,13 +74,18 @@ class UserLoginSerializer(serializers.Serializer):
 
     def get_onboarded(self, obj):
         user = obj['user'] if isinstance(obj, dict) else obj
-        return getattr(user.userprofile, 'onboarded', False) if user else False
+        try:
+            profile = UserProfile.objects.get(user=user)
+            return profile.onboarded
+        except UserProfile.DoesNotExist:
+            return False
 
     def get_preferred_language(self, obj):
         user = obj['user'] if isinstance(obj, dict) else obj
         try:
-            return user.userprofile.preferred_language.code if user and user.userprofile.preferred_language else None
-        except AttributeError:
+            profile = UserProfile.objects.get(user=user)
+            return profile.preferred_language.code if profile.preferred_language else None
+        except (UserProfile.DoesNotExist, AttributeError):
             return None
 
     def to_representation(self, instance):
@@ -97,7 +104,6 @@ class UserLoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
     preferred_language = serializers.SerializerMethodField(read_only=True)
-    onboarded = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -109,7 +115,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "last_name", 
             "name", 
             "preferred_language",
-            "onboarded"
         ]
         read_only_fields = ["id", "username"]
         extra_kwargs = {
@@ -118,13 +123,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
         }
 
     def get_preferred_language(self, obj):
+        user = obj['user'] if isinstance(obj, dict) else obj
         try:
-            return obj.userprofile.preferred_language.code if obj.userprofile.preferred_language else None
+            profile = UserProfile.objects.get(user=user)
+            return profile.preferred_language.code if profile.preferred_language else None
         except AttributeError:
             return None
-
-    def get_onboarded(self, obj):
-        return getattr(obj.userprofile, 'onboarded', False)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
