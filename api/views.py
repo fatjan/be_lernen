@@ -196,7 +196,7 @@ class UpdateUserView(generics.UpdateAPIView):
     def get_object(self):
         return self.request.user  # Only allow users to update their own data
 
-    @action(detail=False, methods=['patch'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated])
     def update(self, request, *args, **kwargs):
         user = self.get_object()
         user_serializer = self.get_serializer(user, data=request.data, partial=True)

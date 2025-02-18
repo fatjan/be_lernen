@@ -13,5 +13,5 @@ urlpatterns = [
     path('api/list-users/', ListUsers.as_view(), name='list_users'),
     path('health/', health_check, name='health_check'),
     path('api/profile/', GetUserDataView.as_view(), name='get-user-data'),
-    path('user/update/', UpdateUserView.as_view(), name='update-user'),
+    path('api/user/update/', UpdateUserView.as_view(), name='update-user'),
 ]
