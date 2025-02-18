@@ -132,7 +132,6 @@ class UserRegisterView(APIView):
         user = serializer.save()
 
         token, _ = Token.objects.get_or_create(user=user)
-        user_profile, _ = UserProfile.objects.get_or_create(user=user)
 
         return Response({
             "message": "User registered successfully!",
@@ -143,7 +142,6 @@ class UserRegisterView(APIView):
                 "last_name": user.last_name,
             },
             "token": token.key,
-            "onboarded": user_profile.onboarded,
         }, status=status.HTTP_201_CREATED)
 
 class ListUsers(APIView):
@@ -187,6 +185,7 @@ class CustomAuthToken(ObtainAuthToken):
             "first_name": user.first_name,
             "last_name": user.last_name,
             "onboarded": user_profile.onboarded,
+            "preferred_language": user_profile.preferred_language,
         })
 
 class UpdateUserView(generics.UpdateAPIView):

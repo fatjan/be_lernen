@@ -68,3 +68,9 @@ To run tests for your app, use the following command:
 ```
 python manage.py test
 ```
+
+10. Create migrations:
+This generates migration files based on any changes made to the models.
+```
+python manage.py makemigrations
+```

@@ -49,3 +49,4 @@ class Word(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     onboarded = models.BooleanField(default=False)
+    preferred_language = models.ForeignKey(Language, related_name='userprofiles', on_delete=models.SET_NULL, null=True)
