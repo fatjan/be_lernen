@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import WordViewSet, ListUsers, UserRegisterView, LanguageViewSet, health_check, GetUserDataView, CustomAuthToken
+from .views import WordViewSet, ListUsers, UserRegisterView, LanguageViewSet, health_check, GetUserDataView, CustomAuthToken, UpdateUserView
 
 router = DefaultRouter()
 router.register(r'words', WordViewSet, basename='word')
@@ -13,4 +13,5 @@ urlpatterns = [
     path('api/list-users/', ListUsers.as_view(), name='list_users'),
     path('health/', health_check, name='health_check'),
     path('api/profile/', GetUserDataView.as_view(), name='get-user-data'),
+    path('user/update/', UpdateUserView.as_view(), name='update-user'),
 ]

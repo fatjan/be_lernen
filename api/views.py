@@ -16,6 +16,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework import generics
 
 def health_check():
     return JsonResponse({"status": "ok"})
@@ -187,3 +188,22 @@ class CustomAuthToken(ObtainAuthToken):
             "last_name": user.last_name,
             "onboarded": user_profile.onboarded,
         })
+
+class UpdateUserView(generics.UpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user  # Only allow users to update their own data
+
+    @action(detail=False, methods=['patch'], permission_classes=[IsAuthenticated])
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        user_serializer = self.get_serializer(user, data=request.data, partial=True)
+
+        if user_serializer.is_valid():
+            user_serializer.save()
+
+            return Response(user_serializer.data)
+
+        return Response(user_serializer.errors, status=400)
