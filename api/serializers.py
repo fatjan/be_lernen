@@ -32,6 +32,19 @@ class WordSerializer(serializers.ModelSerializer):
             "user"
         ]
         read_only_fields = ["id", "added_at", "updated_at"]
+        extra_kwargs = {
+            'word': {'required': True},
+            'language': {'required': True},
+            'translation': {'required': True},
+            'user': {'required': True},
+            'plural_form': {'required': False},
+            'part_of_speech': {'required': False},
+            'example_sentence': {'required': False},
+            'gender': {'required': False},
+            'difficulty_level': {'required': False},
+            'category': {'required': False},
+            'image_url': {'required': False},
+        }
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
