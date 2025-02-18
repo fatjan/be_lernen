@@ -101,9 +101,9 @@ class UserLoginSerializer(serializers.Serializer):
             })
         return representation
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(required=False)
-    preferred_language = serializers.SerializerMethodField(read_only=True)
+class UserProfileDetailSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+    preferred_language = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -111,67 +111,64 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "id", 
             "username", 
             "email", 
-            "first_name", 
-            "last_name", 
             "name", 
             "preferred_language",
         ]
-        read_only_fields = ["id", "username"]
-        extra_kwargs = {
-            "first_name": {"required": False},
-            "last_name": {"required": False},
-        }
-
-    def get_preferred_language(self, obj):
-        user = obj['user'] if isinstance(obj, dict) else obj
-        try:
-            profile = UserProfile.objects.get(user=user)
-            return profile.preferred_language.code if profile.preferred_language else None
-        except AttributeError:
-            return None
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        if instance.first_name or instance.last_name:
-            representation['name'] = f"{instance.first_name} {instance.last_name}".strip()
-        return representation
-
-    def update(self, instance, validated_data):
-        user_profile_data = validated_data.pop('userprofile', {})
-        if user_profile_data:
-            preferred_language_data = user_profile_data.get('preferred_language', {})
-            language_code = preferred_language_data.get('name')
-            if language_code:
-                try:
-                    language_instance = Language.objects.get(code=language_code)
-                    instance.userprofile.preferred_language = language_instance
-                    instance.userprofile.save()
-                except Language.DoesNotExist:
-                    pass
-
-        name = validated_data.pop("name", None)
-        if name:
-            first_name, last_name = self.split_name(name)
-            instance.first_name = first_name
-            instance.last_name = last_name
-
-        return super().update(instance, validated_data)
-
-    def split_name(self, name):
-        name_parts = name.strip().split(" ")
-        first_name = name_parts[0] if name_parts else ""
-        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-        return first_name, last_name
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        # Only include name if first_name or last_name exists
-        if instance.first_name or instance.last_name:
-            representation['name'] = f"{instance.first_name} {instance.last_name}".strip()
-        return representation
+        read_only_fields = ["id", "username", "email"]
 
     def get_preferred_language(self, obj):
         try:
             return obj.userprofile.preferred_language.code if obj.userprofile.preferred_language else None
         except AttributeError:
             return None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.first_name or instance.last_name:
+            representation['name'] = f"{instance.first_name} {instance.last_name}".strip()
+        return representation
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(required=False)
+    preferred_language = serializers.CharField(required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            "first_name", 
+            "last_name", 
+            "name", 
+            "email",
+            "preferred_language",
+        ]
+
+    def update(self, instance, validated_data):
+        # Ensure UserProfile exists
+        print('update validated_data: ', validated_data)
+        userprofile, created = UserProfile.objects.get_or_create(user=instance)
+        
+        # Handle preferred language update
+        preferred_language_code = validated_data.pop('preferred_language', None)
+        if preferred_language_code:
+            try:
+                language_instance = Language.objects.get(code=preferred_language_code)
+                userprofile.preferred_language = language_instance
+                userprofile.save()
+            except Language.DoesNotExist:
+                raise serializers.ValidationError(f"Language with code '{preferred_language_code}' does not exist")
+    
+        # Handle name update
+        name = validated_data.pop("name", None)
+        if name:
+            first_name, last_name = self.split_name(name)
+            instance.first_name = first_name
+            instance.last_name = last_name
+            instance.save()
+    
+        return instance
+
+    def split_name(self, name):
+        name_parts = name.strip().split(" ")
+        first_name = name_parts[0] if name_parts else ""
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+        return first_name, last_name

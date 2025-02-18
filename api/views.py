@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
 from .models import Word, Language, UserProfile
-from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserLoginSerializer, UserProfileSerializer
+from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserLoginSerializer, UserProfileDetailSerializer, UserProfileUpdateSerializer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import WordFilter
@@ -181,11 +181,11 @@ class GetUserDataView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserProfileSerializer(request.user)
+        serializer = UserProfileDetailSerializer(request.user)
         return Response(serializer.data)
 
 class UpdateUserView(generics.UpdateAPIView):
-    serializer_class = UserProfileSerializer
+    serializer_class = UserProfileUpdateSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
