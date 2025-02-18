@@ -166,7 +166,8 @@ class GetUserDataView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user 
+        user = request.user
+        user = User.objects.select_related('userprofile__preferred_language').get(id=user.id)
         serializer = UserSerializer(user)
         return Response(serializer.data)
 

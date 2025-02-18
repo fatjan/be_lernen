@@ -51,9 +51,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(write_only=True, required=False)  # Accept `name` on input but don't include in output
+    preferred_language = serializers.CharField(source='userprofile.preferred_language.name', required=False)
+    
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "name"]
+        fields = ["id", "username", "email", "first_name", "last_name", "name", "preferred_language"]
         extra_kwargs = {
             "first_name": {"required": False},
             "last_name": {"required": False},
@@ -72,6 +74,18 @@ class UserSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        user_profile_data = validated_data.pop('userprofile', {})
+        if user_profile_data:
+            preferred_language_data = user_profile_data.get('preferred_language', {})
+            language_code = preferred_language_data.get('name')
+            if language_code:
+                try:
+                    language_instance = Language.objects.get(code=language_code)
+                    instance.userprofile.preferred_language = language_instance
+                    instance.userprofile.save()
+                except Language.DoesNotExist:
+                    pass
+
         name = validated_data.pop("name", None)
         if name:
             first_name, last_name = self.split_name(name)
