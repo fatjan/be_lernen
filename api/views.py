@@ -88,7 +88,7 @@ class WordViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def featured(self, request):
-        featured_words = self.get_queryset().filter(category='daily')
+        featured_words = Word.objects.select_related('language', 'user').filter(category='daily')
         page = self.paginate_queryset(featured_words)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

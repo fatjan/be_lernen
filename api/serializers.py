@@ -48,18 +48,25 @@ class WordSerializer(serializers.ModelSerializer):
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    name = serializers.CharField(write_only=True)  # Add name field
 
     class Meta:
         model = User
-        fields = ['username', 'password', 'email', 'first_name', 'last_name']
+        fields = ['username', 'password', 'email', 'name']
     
     def create(self, validated_data):
+        # Extract and split name
+        name = validated_data.pop('name', '')
+        name_parts = name.strip().split(" ")
+        first_name = name_parts[0] if name_parts else ""
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
         user = User.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password'],
             email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
+            first_name=first_name,
+            last_name=last_name,
         )
         return user
 
