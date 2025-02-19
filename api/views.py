@@ -126,6 +126,31 @@ class WordViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=400)
 
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def suggestions(self, request):
+        query = request.query_params.get('query', '').strip()
+        language_code = request.query_params.get('language')
+        limit = min(int(request.query_params.get('limit', 3)), 5)
+
+        if not query:
+            return Response([])
+
+        queryset = Word.objects.select_related('language')
+        
+        if language_code:
+            queryset = queryset.filter(language__code=language_code)
+        
+        # Get full word objects instead of just the word field
+        suggestions = (
+            queryset.filter(word__istartswith=query)
+            .distinct()
+            [:limit]
+        )
+
+        # Serialize the word objects
+        serializer = self.get_serializer(suggestions, many=True)
+        return Response(serializer.data)
+
 class UserRegisterView(APIView):
     """
     API endpoint for user registration.
