@@ -150,7 +150,7 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=False)
-    preferred_language = serializers.CharField(required=False)
+    preferred_language = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = User
