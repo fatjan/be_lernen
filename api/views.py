@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
 from .models import Word, Language, UserProfile
-from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserLoginSerializer, UserProfileDetailSerializer, UserProfileUpdateSerializer
+from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserLoginSerializer, UserProfileDetailSerializer, UserProfileUpdateSerializer, FeedbackSerializer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import WordFilter
@@ -242,4 +242,35 @@ class UpdateUserView(generics.UpdateAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        return Response(serializer.data)
+
+class FeedbackView(APIView):
+    """
+    API endpoint for user feedback.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data.copy()
+        data['user'] = request.user.id
+        
+        serializer = FeedbackSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "Thank you for your feedback!",
+                "data": serializer.data
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response(
+                {"error": "Not authorized to view feedback"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        feedbacks = Feedback.objects.all().order_by('-created_at')
+        serializer = FeedbackSerializer(feedbacks, many=True)
         return Response(serializer.data)

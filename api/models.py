@@ -50,3 +50,36 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     onboarded = models.BooleanField(default=False)
     preferred_language = models.ForeignKey(Language, related_name='userprofiles', on_delete=models.SET_NULL, null=True)
+
+class Feedback(models.Model):
+    SATISFACTION_CHOICES = [
+        (1, 'Very Dissatisfied'),
+        (2, 'Dissatisfied'),
+        (3, 'Neutral'),
+        (4, 'Satisfied'),
+        (5, 'Very Satisfied')
+    ]
+
+    RECOMMENDATION_CHOICES = [
+        (1, 'Definitely Not'),
+        (2, 'Probably Not'),
+        (3, 'Maybe'),
+        (4, 'Probably Yes'),
+        (5, 'Definitely Yes')
+    ]
+
+    satisfaction_level = models.IntegerField(choices=SATISFACTION_CHOICES)
+    would_recommend = models.IntegerField(choices=RECOMMENDATION_CHOICES)
+    favorite_feature = models.CharField(max_length=100)
+    most_challenging = models.CharField(max_length=100)
+    feature_requests = models.TextField()
+    improvement_suggestions = models.TextField()
+    learning_goals = models.TextField()
+    interface_rating = models.IntegerField(choices=SATISFACTION_CHOICES)
+    willing_to_be_contacted = models.BooleanField(default=False)
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_whatsapp = models.CharField(max_length=20, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
