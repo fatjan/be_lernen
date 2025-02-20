@@ -7,7 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
-from .models import Word, Language, UserProfile
+from .models import Word, Language, UserProfile, Feedback
 from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserLoginSerializer, UserProfileDetailSerializer, UserProfileUpdateSerializer, FeedbackSerializer
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
@@ -214,6 +214,7 @@ class CustomAuthToken(ObtainAuthToken):
         
         # Use UserSerializer for consistent data representation
         user_data = UserLoginSerializer(user).data
+        user_data['is_admin'] = user.is_staff
         
         return Response({
             'token': token.key,
