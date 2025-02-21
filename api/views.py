@@ -17,9 +17,17 @@ from rest_framework.decorators import action
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework import generics, filters
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
-def health_check():
-    return JsonResponse({"status": "ok"})
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def ping(request):
+    return Response({
+        "status": "success",
+        "message": "pong"
+    })
 
 class LanguageViewSet(viewsets.ModelViewSet):
     """
