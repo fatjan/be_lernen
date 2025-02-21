@@ -216,18 +216,23 @@ class ListUsers(APIView):
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        
-        # Use UserSerializer for consistent data representation
-        user_data = UserLoginSerializer(user).data
-        user_data['is_admin'] = user.is_staff
-        
-        return Response({
-            'token': token.key,
-            'user': user_data
-        })
+        try:
+            serializer.is_valid(raise_exception=True)
+            user = serializer.validated_data['user']
+            token, created = Token.objects.get_or_create(user=user)
+            
+            user_data = UserLoginSerializer(user).data
+            user_data['is_admin'] = user.is_staff
+            
+            return Response({
+                'token': token.key,
+                'user': user_data
+            })
+        except ValidationError as e:
+            return Response({
+                'error': 'Invalid credentials',
+                'message': 'Unable to log in with provided credentials.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 class GetUserDataView(APIView):
     authentication_classes = [TokenAuthentication]
