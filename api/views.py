@@ -93,7 +93,8 @@ def google_auth(request):
                 'first_name': user.first_name,
                 'last_name': user.last_name,
                 'is_admin': user.is_staff,
-                'onboarded': hasattr(user, 'userprofile') and user.userprofile.onboarded
+                'onboarded': hasattr(user, 'userprofile') and user.userprofile.onboarded,
+                'preferred_language': hasattr(user, 'userprofile') and user.userprofile.preferred_language
             }
         })
             
