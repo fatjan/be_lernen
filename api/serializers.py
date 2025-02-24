@@ -162,6 +162,20 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
             "preferred_language",
         ]
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Add preferred language to the response
+        try:
+            representation['preferred_language'] = instance.userprofile.preferred_language.code if instance.userprofile.preferred_language else None
+        except (UserProfile.DoesNotExist, AttributeError):
+            representation['preferred_language'] = None
+        
+        # Add name to the response
+        if instance.first_name or instance.last_name:
+            representation['name'] = f"{instance.first_name} {instance.last_name}".strip()
+        
+        return representation
+
     def update(self, instance, validated_data):
         # Ensure UserProfile exists
         userprofile, created = UserProfile.objects.get_or_create(user=instance)
