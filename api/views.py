@@ -21,11 +21,18 @@ from social_django.utils import load_strategy, load_backend
 from social_core.exceptions import MissingBackend, AuthFailed
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from social_core.exceptions import AuthForbidden  # Add this import at the top
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def google_auth(request):
     access_token = request.data.get('access_token')
+    
+    if not access_token:
+        return Response({
+            'error': 'Missing token',
+            'message': 'Access token is required'
+        }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
         strategy = load_strategy(request)
@@ -33,9 +40,7 @@ def google_auth(request):
         user = backend.do_auth(access_token)
         
         if user:
-            # Create UserProfile if it doesn't exist
             UserProfile.objects.get_or_create(user=user)
-            
             token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 'token': token.key,
@@ -46,17 +51,27 @@ def google_auth(request):
                     'onboarded': hasattr(user, 'userprofile') and user.userprofile.onboarded
                 }
             })
-        else:
-            return Response(
-                {'error': 'Authentication failed'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        
+        return Response({
+            'error': 'Authentication failed',
+            'message': 'Unable to authenticate with provided token'
+        }, status=status.HTTP_400_BAD_REQUEST)
             
+    except AuthForbidden as e:
+        return Response({
+            'error': 'Access forbidden',
+            'message': 'Google authentication failed. Please ensure you have a valid Google account.'
+        }, status=status.HTTP_403_FORBIDDEN)
     except (MissingBackend, AuthFailed) as e:
-        return Response(
-            {'error': str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({
+            'error': 'Authentication error',
+            'message': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': 'Server error',
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
