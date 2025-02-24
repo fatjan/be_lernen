@@ -161,8 +161,8 @@ REST_FRAMEWORK = {
 }
 
 # Google OAuth2 settings
-SOCIAL_AUTH_GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv('GOOGLE_OAUTH2_SECRET')
+GOOGLE_OAUTH2_URI = os.getenv('GOOGLE_OAUTH2_URI')
+
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',

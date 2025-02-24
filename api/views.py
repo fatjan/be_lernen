@@ -21,58 +21,91 @@ from social_django.utils import load_strategy, load_backend
 from social_core.exceptions import MissingBackend, AuthFailed
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from social_core.exceptions import AuthForbidden  # Add this import at the top
+from social_core.exceptions import AuthForbidden 
+import requests 
+import json
+from django.conf import settings
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def google_auth(request):
-    # Check both possible token locations in the request
-    access_token = request.data.get('access_token') or request.data.get('credential')
+    token_data = request.data.get('credential', {})
     
-    if not access_token:
+    if not token_data.get('access_token'):
         return Response({
             'error': 'Missing token',
-            'message': 'Access token is required',
-            'received_data': request.data  # Debug info
+            'message': 'Google access token is required',
+            'received_data': request.data
         }, status=status.HTTP_400_BAD_REQUEST)
     
+    # Create headers with the access token
+    headers = {
+        'Authorization': f"{token_data.get('token_type', 'Bearer')} {token_data.get('access_token')}"
+    }
+
+    google_oauth2_uri = settings.GOOGLE_OAUTH2_URI
+    
     try:
-        strategy = load_strategy(request)
-        backend = load_backend(strategy=strategy, name='google-oauth2', redirect_uri=None)
-        user = backend.do_auth(access_token)
-        
-        if user:
-            UserProfile.objects.get_or_create(user=user)
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({
-                'token': token.key,
-                'user': {
-                    'username': user.username,
-                    'email': user.email,
-                    'is_admin': user.is_staff,
-                    'onboarded': hasattr(user, 'userprofile') and user.userprofile.onboarded
-                }
-            })
-        
-        return Response({
-            'error': 'Authentication failed',
-            'message': 'Unable to authenticate with provided token'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        response = requests.get(
+            google_oauth2_uri,
+            headers=headers
+        )
+        if response.status_code != 200:
+            raise ValueError('Failed to get user info from Google')
             
-    except AuthForbidden as e:
+        user_info = response.json()
+        
+        # Extract user info
+        email = user_info['email']
+        first_name = user_info.get('given_name', '')
+        last_name = user_info.get('family_name', '')
+        
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Create new user
+            username = email.split('@')[0]
+            base_username = username
+            counter = 1
+            
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+        
+        # Ensure UserProfile exists
+        UserProfile.objects.get_or_create(user=user)
+        
+        # Create/get auth token
+        token, _ = Token.objects.get_or_create(user=user)
+        
         return Response({
-            'error': 'Access forbidden',
-            'message': 'Google authentication failed. Please ensure you have a valid Google account.'
-        }, status=status.HTTP_403_FORBIDDEN)
-    except (MissingBackend, AuthFailed) as e:
+            'token': token.key,
+            'user': {
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'is_admin': user.is_staff,
+                'onboarded': hasattr(user, 'userprofile') and user.userprofile.onboarded
+            }
+        })
+            
+    except ValueError as e:
         return Response({
-            'error': 'Authentication error',
-            'message': str(e)
+            'error': 'Invalid token',
+            'message': 'Token validation failed'
         }, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({
             'error': 'Server error',
-            'message': 'An unexpected error occurred'
+            'message': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
