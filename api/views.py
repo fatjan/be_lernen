@@ -26,12 +26,14 @@ from social_core.exceptions import AuthForbidden  # Add this import at the top
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def google_auth(request):
-    access_token = request.data.get('access_token')
+    # Check both possible token locations in the request
+    access_token = request.data.get('access_token') or request.data.get('credential')
     
     if not access_token:
         return Response({
             'error': 'Missing token',
-            'message': 'Access token is required'
+            'message': 'Access token is required',
+            'received_data': request.data  # Debug info
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
