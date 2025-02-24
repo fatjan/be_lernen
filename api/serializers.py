@@ -164,7 +164,6 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # Ensure UserProfile exists
-        print('update validated_data: ', validated_data)
         userprofile, created = UserProfile.objects.get_or_create(user=instance)
         
         # Handle preferred language update
