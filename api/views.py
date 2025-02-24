@@ -17,9 +17,42 @@ from rest_framework.decorators import action
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework import generics, filters
+from social_django.utils import load_strategy, load_backend
+from social_core.exceptions import MissingBackend, AuthFailed
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_auth(request):
+    access_token = request.data.get('access_token')
+    
+    try:
+        strategy = load_strategy(request)
+        backend = load_backend(strategy=strategy, name='google-oauth2', redirect_uri=None)
+        user = backend.do_auth(access_token)
+        
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'user': {
+                    'username': user.username,
+                    'email': user.email,
+                    'is_admin': user.is_staff
+                }
+            })
+        else:
+            return Response(
+                {'error': 'Authentication failed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+    except (MissingBackend, AuthFailed) as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 @api_view(['GET'])
 @permission_classes([AllowAny])

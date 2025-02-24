@@ -58,6 +58,7 @@ storage3==0.11.3
 StrEnum==0.4.15
 supabase==2.13.0
 supafunc==0.9.3
+social-auth-app-django==5.2.0
 typer==0.15.1
 typing_extensions==4.12.2
 uvicorn==0.34.0
