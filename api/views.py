@@ -8,7 +8,11 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
 from .models import Word, Language, UserProfile, Feedback
-from .serializers import WordSerializer, UserRegistrationSerializer, LanguageSerializer, UserLoginSerializer, UserProfileDetailSerializer, UserProfileUpdateSerializer, FeedbackSerializer
+from .serializers import (
+    WordSerializer, UserRegistrationSerializer, LanguageSerializer, 
+    UserLoginSerializer, UserProfileDetailSerializer, 
+    UserProfileUpdateSerializer, FeedbackSerializer, GoogleAuthSerializer
+)
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import WordFilter
@@ -29,23 +33,17 @@ from django.conf import settings
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def google_auth(request):
-    token_data = request.data.get('credential', {})
-    
-    if not token_data.get('access_token'):
-        return Response({
-            'error': 'Missing token',
-            'message': 'Google access token is required',
-            'received_data': request.data
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Create headers with the access token
-    headers = {
-        'Authorization': f"{token_data.get('token_type', 'Bearer')} {token_data.get('access_token')}"
-    }
-
-    google_oauth2_uri = settings.GOOGLE_OAUTH2_URI
-    
+    serializer = GoogleAuthSerializer(data=request.data)
     try:
+        serializer.is_valid(raise_exception=True)
+        token_data = serializer.validated_data['credential']
+        
+        headers = {
+            'Authorization': f"{token_data.get('token_type', 'Bearer')} {token_data.get('access_token')}"
+        }
+
+        google_oauth2_uri = settings.GOOGLE_OAUTH2_URI
+        
         response = requests.get(
             google_oauth2_uri,
             headers=headers
@@ -79,6 +77,9 @@ def google_auth(request):
                 last_name=last_name
             )
         
+        # Update last login
+        serializer.update_last_login(user)
+        
         # Ensure UserProfile exists
         UserProfile.objects.get_or_create(user=user)
         
@@ -102,12 +103,12 @@ def google_auth(request):
         return Response({
             'error': 'Invalid token',
             'message': 'Token validation failed'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        }, status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({
             'error': 'Server error',
             'message': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        }, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -303,13 +304,13 @@ class ListUsers(APIView):
 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer = UserLoginSerializer(data=request.data, context={'request': request})
         try:
             serializer.is_valid(raise_exception=True)
             user = serializer.validated_data['user']
             token, created = Token.objects.get_or_create(user=user)
             
-            user_data = UserLoginSerializer(user).data
+            user_data = serializer.data
             user_data['is_admin'] = user.is_staff
             
             return Response({

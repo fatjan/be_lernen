@@ -84,14 +84,20 @@ class UserLoginSerializer(serializers.Serializer):
             user = authenticate(username=username, password=password)
             if user:
                 if user.is_active:
-                    # Create UserProfile if it doesn't exist
+                    # Update last_login with debug prints
+                    from django.utils import timezone
+                    current_time = timezone.now()
+                    user.last_login = current_time
+                    user.save(update_fields=['last_login'])
+                    
+                    # Rest of the function remains the same
                     UserProfile.objects.get_or_create(user=user)
                     data['user'] = user
                     return data
                 raise serializers.ValidationError('User account is disabled.')
             raise serializers.ValidationError('Unable to log in with provided credentials.')
         raise serializers.ValidationError('Must include "username" and "password".')
-
+    
     def get_onboarded(self, obj):
         user = obj['user'] if isinstance(obj, dict) else obj
         try:
@@ -233,3 +239,21 @@ class FeedbackSerializer(serializers.ModelSerializer):
                     "Either email or WhatsApp number is required when willing to be contacted is true"
                 )
         return data
+
+class GoogleAuthSerializer(serializers.Serializer):
+    credential = serializers.DictField()
+
+    def validate(self, data):
+        credential = data.get('credential', {})
+        if not credential.get('access_token'):
+            raise serializers.ValidationError({
+                'error': 'Missing token',
+                'message': 'Google access token is required'
+            })
+        return data
+
+    def update_last_login(self, user):
+        from django.utils import timezone
+        current_time = timezone.now()
+        user.last_login = current_time
+        user.save(update_fields=['last_login'])
