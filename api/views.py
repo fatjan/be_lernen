@@ -33,13 +33,17 @@ def google_auth(request):
         user = backend.do_auth(access_token)
         
         if user:
+            # Create UserProfile if it doesn't exist
+            UserProfile.objects.get_or_create(user=user)
+            
             token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 'token': token.key,
                 'user': {
                     'username': user.username,
                     'email': user.email,
-                    'is_admin': user.is_staff
+                    'is_admin': user.is_staff,
+                    'onboarded': hasattr(user, 'userprofile') and user.userprofile.onboarded
                 }
             })
         else:
