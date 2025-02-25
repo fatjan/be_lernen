@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import Word, User, Language, UserProfile, Feedback
+from .models import Word, User, Language, UserProfile, Feedback, SubscriptionPlan
 
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -127,9 +127,15 @@ class UserLoginSerializer(serializers.Serializer):
             })
         return representation
 
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
+        fields = ['id', 'name', 'code', 'price', 'description', 'max_words', 'features']
+
 class UserProfileDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(read_only=True)
     preferred_language = serializers.SerializerMethodField()
+    subscription_code = serializers.SerializerMethodField()  # Add this field
 
     class Meta:
         model = User
@@ -139,8 +145,15 @@ class UserProfileDetailSerializer(serializers.ModelSerializer):
             "email", 
             "name", 
             "preferred_language",
+            "subscription_code",  # Add this to fields
         ]
         read_only_fields = ["id", "username", "email"]
+
+    def get_subscription_code(self, obj):
+        try:
+            return obj.userprofile.subscription.code if obj.userprofile.subscription else None
+        except AttributeError:
+            return None
 
     def get_preferred_language(self, obj):
         try:

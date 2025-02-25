@@ -46,10 +46,59 @@ class Word(models.Model):
     def __str__(self):
         return self.word
 
+class SubscriptionPlan(models.Model):
+    PLAN_FREE = 'free'
+    PLAN_BASIC = 'basic'
+    PLAN_PREMIUM = 'premium'
+    
+    PLAN_CHOICES = [
+        (PLAN_FREE, 'Free'),
+        (PLAN_BASIC, 'Basic'),
+        (PLAN_PREMIUM, 'Premium'),
+    ]
+
+    CURRENCY_CHOICES = [
+        ('IDR', 'Indonesian Rupiah'),
+        ('USD', 'US Dollar'),
+        ('EUR', 'Euro'),
+    ]
+
+    name = models.CharField(max_length=50)
+    code = models.CharField(max_length=20, choices=PLAN_CHOICES, unique=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(
+        max_length=3,
+        choices=CURRENCY_CHOICES,
+        default='USD'
+    )
+    description = models.TextField(blank=True)
+    max_words = models.IntegerField(default=100)
+    features = models.JSONField(default=dict)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.currency} {self.price})"
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     onboarded = models.BooleanField(default=False)
-    preferred_language = models.ForeignKey(Language, related_name='userprofiles', on_delete=models.SET_NULL, null=True)
+    preferred_language = models.ForeignKey(
+        Language, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+    subscription = models.ForeignKey(
+        SubscriptionPlan,
+        on_delete=models.SET_NULL,
+        related_name='subscribers',
+        null=True,
+        blank=True
+    )
+    subscription_start_date = models.DateTimeField(null=True, blank=True)
+    subscription_end_date = models.DateTimeField(null=True, blank=True)
 
 class Feedback(models.Model):
     SATISFACTION_CHOICES = [
@@ -68,6 +117,13 @@ class Feedback(models.Model):
         (5, 'Definitely Yes')
     ]
 
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL,  # Won't delete feedback if user is deleted
+        related_name='feedbacks',
+        null=True,
+        blank=True
+    )
     satisfaction_level = models.IntegerField(choices=SATISFACTION_CHOICES)
     would_recommend = models.IntegerField(choices=RECOMMENDATION_CHOICES)
     favorite_feature = models.CharField(max_length=100)
