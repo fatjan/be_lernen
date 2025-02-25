@@ -13,6 +13,26 @@ class LanguageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 class WordSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        user_profile = self.context['request'].user.userprofile
+        language_code = data['language'].code
+
+        if not user_profile.can_add_word(language_code):
+            max_words = user_profile.subscription.max_words if user_profile.subscription else 0
+            raise serializers.ValidationError(
+                f"Word limit reached for {language_code}. Maximum {max_words} words allowed per language with your current plan."
+            )
+        return data
+
+    def create(self, validated_data):
+        word = super().create(validated_data)
+        self.context['request'].user.userprofile.increment_words_count(word.language.code)
+        return word
+
+    def delete(self, instance):
+        language_code = instance.language.code
+        instance.delete()
+        self.context['request'].user.userprofile.decrement_words_count(language_code)
     class Meta:
         model = Word
         fields = [

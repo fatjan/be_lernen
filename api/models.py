@@ -84,21 +84,31 @@ class SubscriptionPlan(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     onboarded = models.BooleanField(default=False)
-    preferred_language = models.ForeignKey(
-        Language, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True
-    )
-    subscription = models.ForeignKey(
-        SubscriptionPlan,
-        on_delete=models.SET_NULL,
-        related_name='subscribers',
-        null=True,
-        blank=True
-    )
+    preferred_language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True, blank=True)
+    subscription = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
     subscription_start_date = models.DateTimeField(null=True, blank=True)
     subscription_end_date = models.DateTimeField(null=True, blank=True)
+    words_count = models.JSONField(default=dict)  # Store count per language: {'de': 10, 'en': 5}
+
+    def get_words_count(self, language_code):
+        return self.words_count.get(language_code, 0)
+
+    def increment_words_count(self, language_code):
+        current_count = self.words_count.get(language_code, 0)
+        self.words_count[language_code] = current_count + 1
+        self.save()
+
+    def decrement_words_count(self, language_code):
+        current_count = self.words_count.get(language_code, 0)
+        if current_count > 0:
+            self.words_count[language_code] = current_count - 1
+            self.save()
+
+    def can_add_word(self, language_code):
+        if not self.subscription:
+            return False
+        current_count = self.get_words_count(language_code)
+        return current_count < self.subscription.max_words
 
 class Feedback(models.Model):
     SATISFACTION_CHOICES = [
