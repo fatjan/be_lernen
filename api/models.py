@@ -149,3 +149,43 @@ class Feedback(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class Exercise(models.Model):
+    EXERCISE_TYPES = [
+        ('reading', 'Reading Comprehension'),
+        ('grammar', 'Grammar Exercise'),
+    ]
+    
+    DIFFICULTY_LEVELS = [
+        ('A1', 'Beginner'),
+        ('A2', 'Elementary'),
+        ('B1', 'Intermediate'),
+        ('B2', 'Upper Intermediate'),
+        ('C1', 'Advanced'),
+        ('C2', 'Mastery'),
+    ]
+
+    title = models.CharField(max_length=200)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE)
+    exercise_type = models.CharField(max_length=20, choices=EXERCISE_TYPES)
+    difficulty_level = models.CharField(max_length=2, choices=DIFFICULTY_LEVELS)
+    content = models.TextField()  # Store the exercise content (text or grammar rules)
+    instructions = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class ExerciseQuestion(models.Model):
+    exercise = models.ForeignKey(Exercise, related_name='questions', on_delete=models.CASCADE)
+    question_text = models.TextField()
+    correct_answer = models.TextField()
+    options = models.JSONField(default=list)  # For multiple choice questions
+    explanation = models.TextField(blank=True)
+    order = models.IntegerField(default=0)
+
+class UserExerciseProgress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE)
+    completed = models.BooleanField(default=False)
+    score = models.IntegerField(default=0)
+    answers = models.JSONField(default=dict)  # Store user's answers
+    completed_at = models.DateTimeField(null=True, blank=True)

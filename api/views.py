@@ -29,6 +29,32 @@ from social_core.exceptions import AuthForbidden
 import requests 
 import json
 from django.conf import settings
+from .services.exercise_generator import ExerciseGenerator
+
+class ExerciseViewSet(viewsets.ModelViewSet):
+    queryset = Exercise.objects.all()
+    serializer_class = ExerciseSerializer
+
+    @action(detail=False, methods=['post'])
+    def generate(self, request):
+        generator = ExerciseGenerator(api_key=settings.SMOLLM_API_KEY)
+        
+        exercise_type = request.data.get('type')
+        language = request.data.get('language')
+        level = request.data.get('level')
+        
+        if exercise_type == 'reading':
+            topic = request.data.get('topic')
+            exercise_data = generator.generate_reading_exercise(language, level, topic)
+        else:
+            grammar_point = request.data.get('grammar_point')
+            exercise_data = generator.generate_grammar_exercise(language, level, grammar_point)
+
+        serializer = self.get_serializer(data=exercise_data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
