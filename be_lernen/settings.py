@@ -172,3 +172,7 @@ AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+# Hugging Face API key
+HF_API_KEY = os.getenv('HF_API_KEY')
+MODEL_URL = os.getenv('MODEL_URL')

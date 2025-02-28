@@ -1,10 +1,15 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import google_auth, ping, WordViewSet, ListUsers, UserRegisterView, LanguageViewSet, GetUserDataView, CustomAuthToken, UpdateUserView, FeedbackView
+from .views import (
+    google_auth, ping, WordViewSet, ListUsers, UserRegisterView, 
+    LanguageViewSet, GetUserDataView, CustomAuthToken, UpdateUserView, 
+    FeedbackView, ExerciseViewSet
+)
 
 router = DefaultRouter()
 router.register(r'words', WordViewSet, basename='word')
 router.register(r'languages', LanguageViewSet, basename='language')
+router.register(r'exercises', ExerciseViewSet, basename='exercise')
 
 urlpatterns = [
     path('api/', include(router.urls)),  

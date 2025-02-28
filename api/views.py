@@ -7,11 +7,12 @@ from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.http import JsonResponse
-from .models import Word, Language, UserProfile, Feedback
+from .models import Word, Language, UserProfile, Feedback, Exercise
 from .serializers import (
     WordSerializer, UserRegistrationSerializer, LanguageSerializer, 
     UserLoginSerializer, UserProfileDetailSerializer, 
-    UserProfileUpdateSerializer, FeedbackSerializer, GoogleAuthSerializer
+    UserProfileUpdateSerializer, FeedbackSerializer, GoogleAuthSerializer,
+    ExerciseSerializer
 )
 from .exceptions import ConflictError
 from django_filters.rest_framework import DjangoFilterBackend
@@ -37,24 +38,33 @@ class ExerciseViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def generate(self, request):
-        generator = ExerciseGenerator(api_key=settings.SMOLLM_API_KEY)
+        generator = ExerciseGenerator(
+            api_key=settings.HF_API_KEY,
+            url=settings.MODEL_URL
+        )
         
-        exercise_type = request.data.get('type')
-        language = request.data.get('language')
-        level = request.data.get('level')
-        
-        if exercise_type == 'reading':
-            topic = request.data.get('topic')
-            exercise_data = generator.generate_reading_exercise(language, level, topic)
-        else:
-            grammar_point = request.data.get('grammar_point')
-            exercise_data = generator.generate_grammar_exercise(language, level, grammar_point)
+        try:
+            exercise_type = request.data.get('type')
+            language = request.data.get('language')
+            level = request.data.get('level')
+            
+            if exercise_type == 'reading':
+                topic = request.data.get('topic')
+                exercise_data = generator.generate_reading_exercise(language, level, topic)
+            else:
+                grammar_point = request.data.get('grammar_point')
+                exercise_data = generator.generate_grammar_exercise(language, level, grammar_point)
 
-        serializer = self.get_serializer(data=exercise_data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        
-        return Response(serializer.data)
+            serializer = self.get_serializer(data=exercise_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            
+            return Response(serializer.data)
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
