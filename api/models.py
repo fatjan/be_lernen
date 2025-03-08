@@ -85,10 +85,10 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     onboarded = models.BooleanField(default=False)
     preferred_language = models.ForeignKey(Language, on_delete=models.SET_NULL, null=True, blank=True)
-    subscription = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True)
+    subscription = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, default=None)
     subscription_start_date = models.DateTimeField(null=True, blank=True)
     subscription_end_date = models.DateTimeField(null=True, blank=True)
-    words_count = models.JSONField(default=dict)  # Store count per language: {'de': 10, 'en': 5}
+    words_count = models.JSONField(default=dict) 
 
     def get_words_count(self, language_code):
         return self.words_count.get(language_code, 0)

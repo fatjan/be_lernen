@@ -1,10 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (
-    google_auth, ping, WordViewSet, ListUsers, UserRegisterView, 
-    LanguageViewSet, GetUserDataView, CustomAuthToken, UpdateUserView, 
-    FeedbackView, ExerciseViewSet
-)
+from .views import ping
+from .views.word import WordViewSet
+from .views.language import LanguageViewSet
+from .views.exercise import ExerciseViewSet
+from .views.user import UserRegisterView, CustomAuthToken, ListUsers, GetUserDataView, UpdateUserView
+from .views.feedback import FeedbackView
+from .views.google_auth import google_auth
+
 
 router = DefaultRouter()
 router.register(r'words', WordViewSet, basename='word')
