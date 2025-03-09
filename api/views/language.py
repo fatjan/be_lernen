@@ -1,7 +1,7 @@
 from . import (
     viewsets,
     authentication,
-    IsAdminUser,
+    IsAuthenticated,
     Language,
     LanguageSerializer,
 )
@@ -13,7 +13,7 @@ class LanguageViewSet(viewsets.ModelViewSet):
     * Only admin users are able to access this view.
     """
     authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAuthenticated]
 
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
