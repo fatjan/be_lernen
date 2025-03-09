@@ -12,7 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db import IntegrityError
 from ..exceptions import ConflictError
 from api.models import (
-    Word, Language, UserProfile, Feedback, Exercise
+    Word, Language, UserProfile, Feedback, Exercise, User
 )
 from api.serializers.language import LanguageSerializer
 from api.serializers.word import WordSerializer
@@ -26,6 +26,7 @@ from api.serializers.word import WordSerializer
 from api.serializers.reading import ReadingContentSerializer
 from api.services.exercise_generator import ExerciseGenerator
 from be_lernen import settings
+import requests 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
