@@ -196,7 +196,7 @@ class UserExerciseProgress(models.Model):
 class ReadingContent(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
-    language = models.ForeignKey(Language, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, related_name='readings', on_delete=models.CASCADE)
     level = models.CharField(max_length=2, choices=[
         ('A1', 'A1'),
         ('A2', 'A2'),
@@ -209,6 +209,10 @@ class ReadingContent(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['language']),
+            models.Index(fields=['language', 'level']),  # Compound index for common filtering
+        ]
 
     def __str__(self):
         return f"{self.title} ({self.language.name} - {self.level})"

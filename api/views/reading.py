@@ -8,13 +8,14 @@ from ..models import ReadingContent
 from . import ReadingContentSerializer, Language
 from django.db.models import Count
 from ..services.content_generator import ContentGenerator
+from ..filters import ReadingContentFilter
 
 class ReadingContentViewSet(viewsets.ModelViewSet):
     queryset = ReadingContent.objects.all()
     serializer_class = ReadingContentSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['language', 'level', 'topic']
+    filterset_class = ReadingContentFilter  # Use the filter class instead of filterset_fields
     search_fields = ['title', 'content', 'topic']
     ordering_fields = ['created_at', 'title', 'level']
     ordering = ['-created_at']
@@ -51,19 +52,24 @@ class ReadingContentViewSet(viewsets.ModelViewSet):
         })
 
     def get_queryset(self):
-        queryset = ReadingContent.objects.all()
-        language = self.request.query_params.get('language', None)
-        level = self.request.query_params.get('level', None)
-        topic = self.request.query_params.get('topic', None)
+        """
+        Optimize queryset with select_related for language
+        """
+        filters = {}
+        
+        language_code = self.request.query_params.get('language')
+        level = self.request.query_params.get('level')
+        topic = self.request.query_params.get('topic')
 
-        if language:
-            queryset = queryset.filter(language__code=language)
+        if language_code:
+            filters['language__code'] = language_code
         if level:
-            queryset = queryset.filter(level=level)
+            filters['level'] = level
         if topic:
-            queryset = queryset.filter(topic=topic)
+            filters['topic'] = topic
 
-        return queryset
+        print('filters', filters)
+        return ReadingContent.objects.select_related('language').filter(**filters)
 
     @action(detail=False, methods=['post'])
     def generate(self, request):

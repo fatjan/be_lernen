@@ -1,5 +1,5 @@
 import django_filters
-from .models import Word
+from .models import Word, ReadingContent
 from django.db.models import Q
 
 class WordFilter(django_filters.FilterSet):
@@ -20,3 +20,21 @@ class WordFilter(django_filters.FilterSet):
     class Meta:
         model = Word
         fields = ["word", "translation", "example_sentence", "gender", "category", "difficulty_level"]
+
+
+class ReadingContentFilter(django_filters.FilterSet):
+    language = django_filters.CharFilter(field_name='language__code')
+    level = django_filters.CharFilter(field_name='level')
+    topic = django_filters.CharFilter(field_name='topic', lookup_expr='icontains')
+    search = django_filters.CharFilter(method='filter_search_fields')
+
+    def filter_search_fields(self, queryset, name, value):
+        return queryset.filter(
+            Q(title__icontains=value) |
+            Q(content__icontains=value) |
+            Q(topic__icontains=value)
+        )
+
+    class Meta:
+        model = ReadingContent
+        fields = ['language', 'level', 'topic']
