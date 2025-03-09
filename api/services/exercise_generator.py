@@ -13,7 +13,7 @@ class ExerciseGenerator:
     def _create_reading_prompt(self, language: str, level: str, topic: str = None) -> str:
         # Retrieve relevant content
         context = self.knowledge_base.retrieve_relevant_content(language, topic, level)
-        
+
         # Create enhanced prompt with retrieved content
         prompt = f"""Using these examples and rules as reference:
         {json.dumps(context, indent=2)}
@@ -46,33 +46,46 @@ class ExerciseGenerator:
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     def _call_api(self, prompt: str) -> Dict:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        
-        data = {
-            "inputs": prompt,
-            "parameters": {
-                "max_new_tokens": 1000,
-                "temperature": 0.7,
-                "return_full_text": False
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
             }
-        }
+            
+            data = {
+                "inputs": prompt,
+                "parameters": {
+                    "max_new_tokens": 1000,
+                    "temperature": 0.7,
+                    "return_full_text": False
+                }
+            }
 
-        response = requests.post(
-            self.base_url,
-            headers=headers,
-            json=data
-        )
-        
-        if response.status_code == 503:
-            # Model is loading
-            time.sleep(20)  # Wait for model to load
-            response = requests.post(self.base_url, headers=headers, json=data)
-        
-        response.raise_for_status()
-        return {"generated_text": response.json()[0]["generated_text"]}
+            response = requests.post(
+                self.url,
+                headers=headers,
+                json=data,
+                timeout=30  # Add timeout
+            )
+            # Log full response for debugging
+            print(f"API Response [{response.status_code}]: {response.text}")
+            
+            if response.status_code == 503:
+                raise requests.exceptions.RequestException("API is temporarily unavailable (503). Retrying...")
+            
+            response.raise_for_status()
+            return {"generated_text": response.json()[0]["generated_text"]}
+
+        except requests.exceptions.Timeout:
+            raise Exception("API request timed out. Please try again.")
+        except requests.exceptions.ConnectionError:
+            raise Exception("Connection error. Please check your internet connection.")
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"API request failed: {str(e)}")
+        except (KeyError, IndexError) as e:
+            raise Exception(f"Invalid API response format: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Unexpected error during API call: {str(e)}")
 
     def _format_reading_exercise(self, response: Dict) -> Dict:
         # Parse and structure the SmolLM response

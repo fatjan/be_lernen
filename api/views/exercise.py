@@ -2,7 +2,7 @@ from . import (
     viewsets, Response, status,
     Exercise, ExerciseSerializer,
     ExerciseGenerator, action, settings,
-    IsAuthenticated
+    IsAuthenticated, Language
 )
 
 class ExerciseViewSet(viewsets.ModelViewSet):
@@ -19,18 +19,28 @@ class ExerciseViewSet(viewsets.ModelViewSet):
         
         try:
             exercise_type = request.data.get('type')
-            language = request.data.get('language')
+            language_code = request.data.get('language')
             level = request.data.get('level')
             
-            if not all([exercise_type, language, level]):
+            if not all([exercise_type, language_code, level]):
                 return Response(
                     {"error": "Missing required fields: type, language, level"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get language name from code
+            try:
+                language = Language.objects.get(code=language_code)
+                language_name = language.name
+            except Language.DoesNotExist:
+                return Response(
+                    {"error": f"Invalid language code: {language_code}"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
             if exercise_type == 'reading':
                 topic = request.data.get('topic')
-                exercise_data = generator.generate_reading_exercise(language, level, topic)
+                exercise_data = generator.generate_reading_exercise(language_name, level, topic)
             elif exercise_type == 'grammar':
                 grammar_point = request.data.get('grammar_point')
                 if not grammar_point:
