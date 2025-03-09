@@ -13,6 +13,7 @@ from . import (
     UserProfileUpdateSerializer,
     UserProfileDetailSerializer,
     Response,
+    ValidationError,
 )
 
 class UserRegisterView(APIView):
