@@ -8,6 +8,9 @@ class Language(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering = ['name'] 
 
 class Word(models.Model):
     word = models.CharField(max_length=100)
@@ -189,3 +192,23 @@ class UserExerciseProgress(models.Model):
     score = models.IntegerField(default=0)
     answers = models.JSONField(default=dict)  # Store user's answers
     completed_at = models.DateTimeField(null=True, blank=True)
+
+class ReadingContent(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    language = models.ForeignKey(Language, on_delete=models.CASCADE)
+    level = models.CharField(max_length=2, choices=[
+        ('A1', 'A1'),
+        ('A2', 'A2'),
+        ('B1', 'B1'),
+        ('B2', 'B2'),
+    ])
+    topic = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.language.name} - {self.level})"

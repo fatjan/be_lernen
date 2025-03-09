@@ -1,6 +1,7 @@
 from ..models import User, UserProfile
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.utils import timezone
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -40,13 +41,10 @@ class UserLoginSerializer(serializers.Serializer):
             user = authenticate(username=username, password=password)
             if user:
                 if user.is_active:
-                    # Update last_login with debug prints
-                    from django.utils import timezone
                     current_time = timezone.now()
                     user.last_login = current_time
                     user.save(update_fields=['last_login'])
                     
-                    # Rest of the function remains the same
                     UserProfile.objects.get_or_create(user=user)
                     data['user'] = user
                     return data

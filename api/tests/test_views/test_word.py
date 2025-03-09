@@ -103,7 +103,6 @@ class WordViewSetTests(APITestCase):
             'user': self.user.id  # Add the user field
         }
         response = self.client.post(url, data, format='json')
-        print('ini response', response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Word.objects.count(), 2)
         self.assertEqual(Word.objects.get(word='Katze').translation, 'cat')

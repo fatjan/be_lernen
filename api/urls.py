@@ -7,12 +7,14 @@ from .views.exercise import ExerciseViewSet
 from .views.user import UserRegisterView, CustomAuthToken, ListUsers, GetUserDataView, UpdateUserView
 from .views.feedback import FeedbackView
 from .views.google_auth import google_auth
+from .views.reading import ReadingContentViewSet
 
 
 router = DefaultRouter()
 router.register(r'words', WordViewSet, basename='word')
 router.register(r'languages', LanguageViewSet, basename='language')
 router.register(r'exercises', ExerciseViewSet, basename='exercise')
+router.register(r'readings', ReadingContentViewSet, basename='reading')
 
 urlpatterns = [
     path('api/', include(router.urls)),  

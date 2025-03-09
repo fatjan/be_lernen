@@ -55,6 +55,10 @@ class ExerciseViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            language = Language.objects.get(code=language_code)
+            exercise_data['language'] = language.id
+            exercise_data['level'] = level
+
             serializer = self.get_serializer(data=exercise_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
