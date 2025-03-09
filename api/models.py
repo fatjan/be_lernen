@@ -216,3 +216,30 @@ class ReadingContent(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.language.name} - {self.level})"
+    
+    @classmethod
+    def create_reading(cls, title, content, language_code, level, topic=None):
+        """
+        Create a reading content manually
+        
+        Args:
+            title (str): Title of the reading
+            content (str): Main content text
+            language_code (str): Language code (e.g., 'en', 'de')
+            level (str): Difficulty level (A1, A2, B1, B2)
+            topic (str, optional): Topic category
+            
+        Returns:
+            ReadingContent: Created reading content instance
+        """
+        try:
+            language = Language.objects.get(code=language_code)
+            return cls.objects.create(
+                title=title,
+                content=content,
+                language=language,
+                level=level,
+                topic=topic
+            )
+        except Language.DoesNotExist:
+            raise ValueError(f"Language with code '{language_code}' does not exist")

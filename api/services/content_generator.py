@@ -26,7 +26,6 @@ class ContentGenerator:
                 title_match = content.split('Title: ')[-1].split('\n')[0].strip('"')
                 content_match = content.split('Content:\n```\n')[1].split('\n\nTopic:')[0].strip()
                 topic_match = content.split('Topic: ')[-1].strip("'}")
-                
                 return {
                     'title': title_match,
                     'content': content_match,

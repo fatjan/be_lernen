@@ -68,7 +68,6 @@ class ReadingContentViewSet(viewsets.ModelViewSet):
         if topic:
             filters['topic'] = topic
 
-        print('filters', filters)
         return ReadingContent.objects.select_related('language').filter(**filters)
 
     @action(detail=False, methods=['post'])
@@ -97,5 +96,25 @@ class ReadingContentViewSet(viewsets.ModelViewSet):
                 serializer.save()
                 return Response(serializer.data, status=201)
             return Response(serializer.errors, status=400)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+    @action(detail=False, methods=['post'])
+    def create_manual(self, request):
+        """
+        Manually create reading content without using AI generation
+        """
+        try:
+            reading = ReadingContent.create_reading(
+                title=request.data.get('title'),
+                content=request.data.get('content'),
+                language_code=request.data.get('language'),
+                level=request.data.get('level'),
+                topic=request.data.get('topic')
+            )
+            serializer = self.get_serializer(reading)
+            return Response(serializer.data, status=201)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=400)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
