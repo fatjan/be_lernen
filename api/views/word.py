@@ -3,7 +3,8 @@ from . import (
     IsAuthenticated, AllowAny, Response, action,
     PageNumberPagination, DjangoFilterBackend,
     IntegrityError, ConflictError,
-    Word, WordSerializer, Language
+    Word, WordSerializer, Language,
+    ValidationError 
 )
 from api.filters import WordFilter
 
@@ -89,7 +90,7 @@ class WordViewSet(viewsets.ModelViewSet):
         for word in words_data:
             word['user'] = user.id
 
-        serializer = WordSerializer(data=words_data, many=True)
+        serializer = WordSerializer(data=words_data, many=True, context={'request': request}) 
         if serializer.is_valid():
             try:
                 words = serializer.save()
