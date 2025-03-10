@@ -15,6 +15,7 @@ from . import (
     Response,
     ValidationError,
     status,
+    UserProfile,  # Add this import
 )
 
 class UserRegisterView(APIView):
@@ -40,7 +41,7 @@ class UserRegisterView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         user = serializer.save()
-
+        profile = user.userprofile
         token, _ = Token.objects.get_or_create(user=user)
 
         return Response({
@@ -50,6 +51,12 @@ class UserRegisterView(APIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "profile": {
+                    "onboarded": profile.onboarded,
+                    "preferred_language": profile.preferred_language.code if profile.preferred_language else None,
+                    "subscription": profile.subscription.code if profile.subscription else None,
+                    "words_count": profile.words_count
+                }
             },
             "token": token.key,
         }, status=status.HTTP_201_CREATED)
@@ -71,6 +78,7 @@ class ListUsers(APIView):
         usernames = [user.username for user in User.objects.all()]
         return Response(usernames)
 
+# for login 
 class CustomAuthToken(ObtainAuthToken):
     def post(self, request, *args, **kwargs):
         serializer = UserLoginSerializer(data=request.data, context={'request': request})
