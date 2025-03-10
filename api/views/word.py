@@ -132,3 +132,19 @@ class WordViewSet(viewsets.ModelViewSet):
         # Serialize the word objects
         serializer = self.get_serializer(suggestions, many=True)
         return Response(serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        data = request.data.copy()
+        language_code = data.get('language')
+        if language_code:
+            try:
+                language = Language.objects.get(code=language_code)
+                data['language'] = language.id
+            except Language.DoesNotExist:
+                return Response(
+                    {"error": f"Language with code '{language_code}' does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        request._full_data = data
+        return super().update(request, *args, **kwargs)
