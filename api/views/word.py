@@ -3,7 +3,7 @@ from . import (
     IsAuthenticated, AllowAny, Response, action,
     PageNumberPagination, DjangoFilterBackend,
     IntegrityError, ConflictError,
-    Word, WordSerializer
+    Word, WordSerializer, Language
 )
 from api.filters import WordFilter
 
@@ -42,6 +42,17 @@ class WordViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data['user'] = request.user.id
+        language_code = data.get('language')
+        if language_code:
+            try:
+                language = Language.objects.get(code=language_code)
+                data['language'] = language.id
+            except Language.DoesNotExist:
+                return Response(
+                    {"error": f"Language with code '{language_code}' does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         serializer = self.get_serializer(data=data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
