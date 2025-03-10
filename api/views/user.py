@@ -14,6 +14,7 @@ from . import (
     UserProfileDetailSerializer,
     Response,
     ValidationError,
+    status,
 )
 
 class UserRegisterView(APIView):

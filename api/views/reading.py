@@ -118,3 +118,17 @@ class ReadingContentViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=400)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+    
+    def update(self, request, *args, **kwargs):
+        language_code = request.data.get('language')
+        if language_code:
+            try:
+                language = Language.objects.get(code=language_code)
+                request.data['language'] = language.id
+            except Language.DoesNotExist:
+                return Response(
+                    {"error": f"Language with code '{language_code}' does not exist"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        return super().update(request, *args, **kwargs)
