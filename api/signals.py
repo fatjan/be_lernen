@@ -6,7 +6,10 @@ from .models import UserProfile
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.create(user=instance)
+        UserProfile.objects.create(
+            user=instance,
+            words_count={'de': 0, 'en': 0, 'jp': 0}
+        )
 
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):

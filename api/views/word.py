@@ -87,10 +87,19 @@ class WordViewSet(viewsets.ModelViewSet):
         if not isinstance(words_data, list):
             raise ValidationError("Expected a list of words")
 
+        language_code = words_data[0].get('language')
+        if language_code:
+            try:
+                language = Language.objects.get(code=language_code)
+                language_id = language.id
+            except Language.DoesNotExist:
+                raise ValidationError(f"Language with code '{language_code}' does not exist")
+
         for word in words_data:
             word['user'] = user.id
+            word['language'] = language_id
 
-        serializer = WordSerializer(data=words_data, many=True, context={'request': request}) 
+        serializer = WordSerializer(data=words_data, many=True, context={'request': request})
         if serializer.is_valid():
             try:
                 words = serializer.save()

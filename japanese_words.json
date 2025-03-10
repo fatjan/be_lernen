@@ -1,0 +1,167 @@
+[
+    {
+      "language": "jp",
+      "word": "旅行",
+      "translation": "travel",
+      "category": "travel",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "日本へ旅行します。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "切符",
+      "translation": "ticket",
+      "category": "travel",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "切符を買いました。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "空港",
+      "translation": "airport",
+      "category": "travel",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "空港に着きました。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "ホテル",
+      "translation": "hotel",
+      "category": "travel",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "ホテルを予約しました。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "地図",
+      "translation": "map",
+      "category": "travel",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "地図を使って道を探します。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "寿司",
+      "translation": "sushi",
+      "category": "food",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "寿司を食べます。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "天ぷら",
+      "translation": "tempura",
+      "category": "food",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "天ぷらを注文しました。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "餃子",
+      "translation": "gyoza",
+      "category": "food",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "餃子が大好きです。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "味噌汁",
+      "translation": "miso soup",
+      "category": "food",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "味噌汁を作りました。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "焼肉",
+      "translation": "yakiniku",
+      "category": "food",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "焼肉を食べに行きましょう。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "数学",
+      "translation": "mathematics",
+      "category": "academic",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "数学が得意です。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "科学",
+      "translation": "science",
+      "category": "academic",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "科学の授業があります。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "歴史",
+      "translation": "history",
+      "category": "academic",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "歴史を勉強しています。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "文学",
+      "translation": "literature",
+      "category": "academic",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "文学が好きです。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    },
+    {
+      "language": "jp",
+      "word": "哲学",
+      "translation": "philosophy",
+      "category": "academic",
+      "difficulty_level": "easy",
+      "gender": "n/a",
+      "example_sentence": "哲学について考えます。",
+      "plural_form": "n/a",
+      "part_of_speech": "noun"
+    }
+  ]
