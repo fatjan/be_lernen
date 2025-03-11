@@ -8,7 +8,8 @@ def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(
             user=instance,
-            words_count={'de': 0, 'en': 0, 'jp': 0}
+            words_count={'de': 0, 'en': 0, 'jp': 0},
+            subscription_id=1
         )
 
 @receiver(post_save, sender=User)

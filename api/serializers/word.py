@@ -6,12 +6,22 @@ class WordSerializer(serializers.ModelSerializer):
         user_profile = self.context['request'].user.userprofile
         language_code = data['language'].code
 
-        if not user_profile.can_add_word(language_code):
-            max_words = user_profile.subscription.max_words if user_profile.subscription else 50
+        # Initialize language in words_count if it doesn't exist
+        if language_code not in user_profile.words_count:
+            user_profile.words_count[language_code] = 0
+            user_profile.save()
+
+        max_words, can_add_word = self.can_add_word(user_profile, language_code)
+        if not can_add_word:
             raise serializers.ValidationError(
                 f"Word limit reached for {language_code}. Maximum {max_words} words allowed per language with your current plan."
             )
         return data
+    
+    def can_add_word(self, user_profile, language_code):
+        max_words = 50  # default max words
+        current_count = user_profile.words_count.get(language_code, 0)
+        return max_words, current_count < max_words
 
     def create(self, validated_data):
         word = super().create(validated_data)
