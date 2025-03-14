@@ -9,13 +9,20 @@ from . import ReadingContentSerializer, Language
 from django.db.models import Count
 from ..services.content_generator import ContentGenerator
 from ..filters import ReadingContentFilter
+from rest_framework.pagination import PageNumberPagination
+
+class ReadingPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class ReadingContentViewSet(viewsets.ModelViewSet):
     queryset = ReadingContent.objects.all()
     serializer_class = ReadingContentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = ReadingPagination  
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_class = ReadingContentFilter  # Use the filter class instead of filterset_fields
+    filterset_class = ReadingContentFilter
     search_fields = ['title', 'content', 'topic']
     ordering_fields = ['created_at', 'title', 'level']
     ordering = ['level', '-created_at']
