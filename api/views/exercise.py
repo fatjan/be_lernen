@@ -2,86 +2,66 @@ from . import (
     viewsets, Response, status,
     Exercise, ExerciseSerializer,
     ExerciseGenerator, action, settings,
-    IsAuthenticated, Language
+    IsAuthenticated, Language, ExerciseResultSerializer,
+    Word
 )
+from api.services.matching_exercise import MatchingExerciseGenerator
 
 class ExerciseViewSet(viewsets.ModelViewSet):
-    queryset = Exercise.objects.all()
-    serializer_class = ExerciseSerializer
+    serializer_class = ExerciseResultSerializer
     permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return ExerciseResult.objects.filter(user=self.request.user)
 
-    @action(detail=False, methods=['post'])
-    def generate(self, request):
-        generator = ExerciseGenerator(
-            api_key=settings.HF_API_KEY,
-            url=settings.MODEL_URL
-        )
-        
-        try:
-            exercise_type = request.data.get('type')
-            language_code = request.data.get('language')
-            level = request.data.get('level')
-            
-            if not all([exercise_type, language_code, level]):
-                return Response(
-                    {"error": "Missing required fields: type, language, level"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+    @action(detail=False, methods=['get'])
+    def matching(self, request):
+        language_code = request.query_params.get('language')
+        count = int(request.query_params.get('count', 10))
 
-            # Get language name from code
-            try:
-                language = Language.objects.get(code=language_code)
-                language_name = language.name
-            except Language.DoesNotExist:
-                return Response(
-                    {"error": f"Invalid language code: {language_code}"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            if exercise_type == 'reading':
-                topic = request.data.get('topic')
-                exercise_data = generator.generate_reading_exercise(language_name, level, topic)
-            elif exercise_type == 'grammar':
-                grammar_point = request.data.get('grammar_point')
-                if not grammar_point:
-                    return Response(
-                        {"error": "grammar_point is required for grammar exercises"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                exercise_data = generator.generate_grammar_exercise(language, level, grammar_point)
-            else:
-                return Response(
-                    {"error": "Invalid exercise type"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            language = Language.objects.get(code=language_code)
-            exercise_data['language'] = language.id
-            exercise_data['level'] = level
-
-            serializer = self.get_serializer(data=exercise_data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            
-            return Response(serializer.data)
-        except Exception as e:
+        if not language_code:
             return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-    @action(detail=True, methods=['post'])
-    def check_answers(self, request, pk=None):
-        exercise = self.get_object()
-        user_answers = request.data.get('answers', {})
-        
-        if not user_answers:
-            return Response(
-                {"error": "No answers provided"},
+                {"error": "Language parameter is required"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = self.get_serializer(exercise)
-        results = serializer.check_answers(user_answers)
-        
-        return Response(results)
+        # Get user's words for the specified language
+        words = Word.objects.filter(
+            user=request.user,
+            language__code=language_code
+        ).values('word', 'translation')[:count]
+
+        if not words:
+            return Response({})
+
+        # Generate exercise
+        exercise_generator = MatchingExerciseGenerator()
+        exercise = exercise_generator.generate(list(words))
+
+        return Response(exercise)
+
+    @action(detail=False, methods=['post'])
+    def submit_result(self, request):
+        try:
+            language = Language.objects.get(code=request.data.get('language'))
+            result = ExerciseResult.objects.create(
+                user=request.user,
+                exercise_type=request.data.get('exercise_type'),
+                correct_answers=request.data.get('correct_answers', 0),
+                incorrect_answers=request.data.get('incorrect_answers', 0),
+                language=language
+            )
+            
+            serializer = self.get_serializer(result)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Language.DoesNotExist:
+            return Response(
+                {"error": "Invalid language code"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )

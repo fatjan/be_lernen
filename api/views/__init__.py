@@ -24,6 +24,7 @@ from api.serializers.user import UserRegistrationSerializer, UserLoginSerializer
 from api.serializers.language import LanguageSerializer
 from api.serializers.word import WordSerializer
 from api.serializers.reading import ReadingContentSerializer
+from api.serializers.exercise import ExerciseResultSerializer
 from api.services.exercise_generator import ExerciseGenerator
 from be_lernen import settings
 import requests 

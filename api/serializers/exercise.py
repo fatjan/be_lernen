@@ -1,5 +1,13 @@
 from . import serializers
 from ..models import Exercise, ExerciseQuestion, UserExerciseProgress
+from api.models import ExerciseResult
+
+class ExerciseResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExerciseResult
+        fields = ['id', 'exercise_type', 'created_at', 'completed_at', 
+                 'correct_answers', 'incorrect_answers', 'score', 'language']
+        read_only_fields = ['id', 'created_at', 'completed_at', 'score']
 
 class ExerciseQuestionSerializer(serializers.ModelSerializer):
     class Meta:

@@ -243,3 +243,30 @@ class ReadingContent(models.Model):
             )
         except Language.DoesNotExist:
             raise ValueError(f"Language with code '{language_code}' does not exist")
+
+class ExerciseResult(models.Model):
+    EXERCISE_TYPES = [
+        ('matching', 'Matching'),
+        ('reading', 'Reading Comprehension'),
+        ('grammar', 'Grammar'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    exercise_type = models.CharField(max_length=20, choices=EXERCISE_TYPES)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(auto_now=True)
+    correct_answers = models.IntegerField(default=0)
+    incorrect_answers = models.IntegerField(default=0)
+    score = models.FloatField()  # Percentage score
+    language = models.ForeignKey('Language', on_delete=models.CASCADE)
+    
+    class Meta:
+        ordering = ['-created_at']
+
+    def calculate_score(self):
+        total = self.correct_answers + self.incorrect_answers
+        return (self.correct_answers / total * 100) if total > 0 else 0
+
+    def save(self, *args, **kwargs):
+        self.score = self.calculate_score()
+        super().save(*args, **kwargs)
