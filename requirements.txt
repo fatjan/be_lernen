@@ -15,7 +15,7 @@ colorama==0.4.6
 cryptography==44.0.1
 defusedxml==0.7.1
 deprecation==2.1.0
-Django==5.1.5
+Django==4.2.20
 django-cors-headers==4.7.0
 django-db-connection-pool==1.2.5
 django-environ==0.12.0
