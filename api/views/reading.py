@@ -18,7 +18,7 @@ class ReadingContentViewSet(viewsets.ModelViewSet):
     filterset_class = ReadingContentFilter  # Use the filter class instead of filterset_fields
     search_fields = ['title', 'content', 'topic']
     ordering_fields = ['created_at', 'title', 'level']
-    ordering = ['-created_at']
+    ordering = ['level', '-created_at']
 
     @action(detail=False, methods=['get'])
     def topics(self):
@@ -69,10 +69,6 @@ class ReadingContentViewSet(viewsets.ModelViewSet):
             filters['topic'] = topic
 
         queryset = ReadingContent.objects.select_related('language').filter(**filters)
-        
-        # If no level filter is applied, sort by level
-        if not level:
-            queryset = queryset.order_by('level', '-created_at')
         
         return queryset
 
