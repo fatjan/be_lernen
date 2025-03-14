@@ -202,6 +202,8 @@ class ReadingContent(models.Model):
         ('A2', 'A2'),
         ('B1', 'B1'),
         ('B2', 'B2'),
+        ('C1', 'C1'),
+        ('C2', 'C2'),
     ])
     topic = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
