@@ -68,7 +68,13 @@ class ReadingContentViewSet(viewsets.ModelViewSet):
         if topic:
             filters['topic'] = topic
 
-        return ReadingContent.objects.select_related('language').filter(**filters)
+        queryset = ReadingContent.objects.select_related('language').filter(**filters)
+        
+        # If no level filter is applied, sort by level
+        if not level:
+            queryset = queryset.order_by('level', '-created_at')
+        
+        return queryset
 
     @action(detail=False, methods=['post'])
     def generate(self, request):
