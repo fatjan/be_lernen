@@ -48,7 +48,8 @@ class WordSerializer(serializers.ModelSerializer):
             "image_url", 
             "added_at", 
             "updated_at", 
-            "user"
+            "user",
+            "core",
         ]
         read_only_fields = ["id", "added_at", "updated_at"]
         extra_kwargs = {
@@ -63,4 +64,5 @@ class WordSerializer(serializers.ModelSerializer):
             'difficulty_level': {'required': False},
             'category': {'required': False},
             'image_url': {'required': False},
+            'core': {'required': False},
         }

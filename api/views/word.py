@@ -32,12 +32,22 @@ class WordViewSet(viewsets.ModelViewSet):
         """
         Optimize queryset with select_related for language and user
         """
-        filters = {} if self.request.user.is_staff else {"user": self.request.user}
+        core = self.request.query_params.get('core')
+        filters = {} if (self.request.user.is_staff or core == 'true') else {"user": self.request.user}
 
         language_code = self.request.query_params.get("language")
         if language_code:
-            filters["language__code"] = language_code  # Changed from language to language__code
+            filters["language__code"] = language_code
 
+        if core:
+            filters["core"] = core.lower() == 'true'
+
+        if self.request.query_params.get('random'):
+            paginator = WordPagination()
+            paginator.page_size = 100
+            self.pagination_class = paginator.__class__
+            return Word.objects.select_related('language', 'user').filter(**filters).order_by('?')
+        
         return Word.objects.select_related('language', 'user').filter(**filters)
 
     def create(self, request, *args, **kwargs):
@@ -83,6 +93,7 @@ class WordViewSet(viewsets.ModelViewSet):
     def batch(self, request):
         user = request.user
         words_data = request.data
+        successful_words = []
 
         if not isinstance(words_data, list):
             raise ValidationError("Expected a list of words")
@@ -95,28 +106,31 @@ class WordViewSet(viewsets.ModelViewSet):
             except Language.DoesNotExist:
                 raise ValidationError(f"Language with code '{language_code}' does not exist")
 
-        for word in words_data:
-            word['user'] = user.id
-            word['language'] = language_id
+        for word_data in words_data:
+            word_data['user'] = user.id
+            word_data['language'] = language_id
+            
+            # Check if word already exists
+            if not Word.objects.filter(
+                user=user,
+                language=language_id,
+                word=word_data['word']
+            ).exists():
+                serializer = WordSerializer(data=word_data, context={'request': request})
+                if serializer.is_valid():
+                    try:
+                        word = serializer.save()
+                        successful_words.append(word)
+                    except Exception as e:
+                        continue
 
-        serializer = WordSerializer(data=words_data, many=True, context={'request': request})
-        if serializer.is_valid():
-            try:
-                words = serializer.save()
-                if words and hasattr(user, 'userprofile'):
-                    user.userprofile.onboarded = True
-                    user.userprofile.save()
+        if successful_words and hasattr(user, 'userprofile'):
+            user.userprofile.onboarded = True
+            user.userprofile.save()
 
-                return Response({
-                    "message": "Words added successfully!",
-                    "data": WordSerializer(words, many=True).data
-                }, status=201)
-            except IntegrityError:
-                raise ConflictError("One or more words already exist for this user and language")
-            except Exception as e:
-                raise ValidationError(f"Error creating words: {str(e)}")
-
-        return Response(serializer.errors, status=400)
+        return Response({
+            "message": f"Added {len(successful_words)} words successfully!"
+        }, status=201)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def suggestions(self, request):
