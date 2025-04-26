@@ -58,11 +58,16 @@ MIDDLEWARE = [
     'be_lernen.middlewares.PreflightMiddleware'
 ]
 
-frontend_url = os.getenv('FRONTEND_URL')
+frontend_urls = os.getenv('FRONTEND_URL')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000", 
-] + ([frontend_url] if frontend_url else [])
+]
+
+if frontend_urls:
+    CORS_ALLOWED_ORIGINS += [
+        f"https://{url.strip()}" for url in frontend_urls.split(',')
+    ]
 
 CORS_ALLOW_CREDENTIALS = True  # Allow authentication cookies
 CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
