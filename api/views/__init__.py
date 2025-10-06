@@ -28,11 +28,24 @@ from api.serializers.exercise import ExerciseResultSerializer
 from api.services.exercise_generator import ExerciseGenerator
 from be_lernen import settings
 import requests 
+import logging
+logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def ping(request):
-    return Response({
-        "status": "success",
-        "message": "pong"
-    })
+    try:
+        logger.info("Ping request received from %s", request.META.get('REMOTE_ADDR'))
+        
+        # You can include system or database health checks here later if needed
+        return Response(
+            {"status": "success", "message": "pong"},
+            status=status.HTTP_200_OK
+        )
+    
+    except Exception as e:
+        logger.exception("Error in ping endpoint: %s", e)
+        return Response(
+            {"status": "error", "message": "Internal Server Error"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

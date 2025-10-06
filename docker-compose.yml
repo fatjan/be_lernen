@@ -10,7 +10,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./be_lernen:/app
+      - .:/app  # Mount the entire project directory
     environment:
       - DJANGO_SETTINGS_MODULE=be_lernen.settings
     depends_on:
