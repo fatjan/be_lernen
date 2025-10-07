@@ -116,7 +116,7 @@ DATABASES = {
             'keepalives_idle': 30,
             'keepalives_interval': 10,
             'keepalives_count': 5,
-            'pool_mode': os.getenv('DATABASE_POOL_MODE'),
+            'pgbouncer': true,
         }
     }
 }
