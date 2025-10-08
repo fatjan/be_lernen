@@ -116,7 +116,6 @@ DATABASES = {
             'keepalives_idle': 30,
             'keepalives_interval': 10,
             'keepalives_count': 5,
-            'pgbouncer': True,
         }
     }
 }
