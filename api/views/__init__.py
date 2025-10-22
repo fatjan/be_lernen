@@ -20,7 +20,7 @@ from api.serializers.google_auth import GoogleAuthSerializer
 from api.serializers.user_profile import UserProfileDetailSerializer, UserProfileUpdateSerializer
 from api.serializers.exercise import ExerciseSerializer
 from api.serializers.feedback import FeedbackSerializer
-from api.serializers.user import UserRegistrationSerializer, UserLoginSerializer
+from api.serializers.user import UserRegistrationSerializer, UserLoginSerializer, UserUpdatePasswordSerializer
 from api.serializers.language import LanguageSerializer
 from api.serializers.word import WordSerializer
 from api.serializers.reading import ReadingContentSerializer

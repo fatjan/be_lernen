@@ -4,7 +4,7 @@ from .views import ping
 from .views.word import WordViewSet
 from .views.language import LanguageViewSet
 from .views.exercise import ExerciseViewSet
-from .views.user import UserRegisterView, CustomAuthToken, ListUsers, GetUserDataView, UpdateUserView
+from .views.user import UserRegisterView, CustomAuthToken, ListUsers, GetUserDataView, UpdateUserView, UpdateUserPasswordView
 from .views.feedback import FeedbackView
 from .views.google_auth import google_auth
 from .views.reading import ReadingContentViewSet
@@ -26,4 +26,5 @@ urlpatterns = [
     path('api/user/update/', UpdateUserView.as_view(), name='update-user'),
     path('api/feedback/', FeedbackView.as_view(), name='feedback'),
     path('api/auth/google/', google_auth, name='google-auth'),
+    path('api/update-password/', UpdateUserPasswordView.as_view(), name='update-password'),
 ]

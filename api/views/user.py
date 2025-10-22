@@ -16,6 +16,7 @@ from . import (
     ValidationError,
     status,
     UserProfile,  # Add this import
+    UserUpdatePasswordSerializer,
 )
 
 class UserRegisterView(APIView):
@@ -123,3 +124,19 @@ class UpdateUserView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
+
+class UpdateUserPasswordView(APIView):
+    permission_classes = [AllowAny]  
+
+    def post(self, request):
+        serializer = UserUpdatePasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.validated_data.get('username')
+            new_password = serializer.validated_data.get('new_password')
+
+            serializer.update_password(username, new_password)
+            return Response(
+                {'message': 'Password updated successfully.'},
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

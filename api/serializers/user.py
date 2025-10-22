@@ -80,3 +80,28 @@ class UserLoginSerializer(serializers.Serializer):
                 'last_name': user.last_name,
             })
         return representation
+
+class UserUpdatePasswordSerializer(serializers.Serializer):
+    username = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(
+        write_only=True,
+        style={'input_type': 'password'},
+        min_length=5,
+    )
+
+    def validate_new_password(self, value):
+        # Example: you can add your own password rules here
+        if len(value) < 5:
+            raise serializers.ValidationError("Password must be at least 8 characters long.")
+        return value
+    
+    def update_password(self, username, new_password):
+        try:
+            user = User.objects.get(username=username)
+            if not user:
+                raise serializers.ValidationError("User not found.")
+            user.set_password(new_password)
+            user.save()
+            return user
+        except Exception as e:
+            raise serializers.ValidationError(f"Failed to update password: {str(e)}")
