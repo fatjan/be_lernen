@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import ping
-from .views.word import WordViewSet
+from .views.word import WordViewSet, GenerateWordsView
 from .views.language import LanguageViewSet
 from .views.exercise import ExerciseViewSet
 from .views.user import UserRegisterView, CustomAuthToken, ListUsers, GetUserDataView, UpdateUserView, UpdateUserPasswordView
@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/feedback/', FeedbackView.as_view(), name='feedback'),
     path('api/auth/google/', google_auth, name='google-auth'),
     path('api/update-password/', UpdateUserPasswordView.as_view(), name='update-password'),
+    path('api/generate-words/', GenerateWordsView.as_view(), name='generate-words')
 ]
