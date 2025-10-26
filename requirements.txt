@@ -61,7 +61,6 @@ mdurl==0.1.2
 mecab-python3==1.0.10
 multidict==6.1.0
 narwhals==1.41.0
-numpy==2.2.6
 oauthlib==3.2.2
 openai==2.6.1
 packaging==24.2
