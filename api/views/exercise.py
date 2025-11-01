@@ -25,11 +25,17 @@ class ExerciseViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Get user's words for the specified language
-        words = Word.objects.filter(
-            user=request.user,
-            language__code=language_code
-        ).values('word', 'translation')[:count]
+        # Get words for the specified language (randomized)
+        # Admin users get all words, regular users get only their words
+        if request.user.is_staff:
+            words = Word.objects.filter(
+                language__code=language_code
+            ).values('word', 'translation').order_by('?')[:count]
+        else:
+            words = Word.objects.filter(
+                user=request.user,
+                language__code=language_code
+            ).values('word', 'translation').order_by('?')[:count]
 
         if not words:
             return Response({})
